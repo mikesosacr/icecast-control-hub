@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,76 +8,9 @@ import { Activity, BarChart, Radio, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
-import { MountPoint, Listener } from "@/types/icecast";
-
-// Sample data
-const mockMountpoints: MountPoint[] = [
-  {
-    id: "1",
-    name: "Main Stream",
-    point: "/stream",
-    type: "audio/mpeg",
-    bitrate: 128,
-    description: "Main radio stream",
-    genre: "Various",
-    streamUrl: "http://example.com/stream",
-    listeners: {
-      current: 87,
-      peak: 156,
-    },
-    streamUser: "source",
-    streamPassword: "hackme",
-    isPublic: true,
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "High Quality",
-    point: "/high",
-    type: "audio/aac",
-    bitrate: 256,
-    description: "High quality AAC stream",
-    genre: "Electronic",
-    streamUrl: "http://example.com/high",
-    listeners: {
-      current: 52,
-      peak: 124,
-    },
-    streamUser: "source2",
-    streamPassword: "hackme2",
-    isPublic: true,
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Low Bandwidth",
-    point: "/mobile",
-    type: "audio/mpeg",
-    bitrate: 64,
-    description: "Low bandwidth stream for mobile",
-    genre: "Talk",
-    streamUrl: "http://example.com/mobile",
-    listeners: {
-      current: 6,
-      peak: 76,
-    },
-    streamUser: "source3",
-    streamPassword: "hackme3",
-    isPublic: false,
-    status: "inactive",
-  },
-];
-
-const mockListeners: Listener[] = [
-  { id: "1", ip: "192.168.1.101", userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X)", connectedAt: "2023-09-15T12:34:56", duration: 1523, mountpoint: "/stream" },
-  { id: "2", ip: "192.168.1.102", userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", connectedAt: "2023-09-15T12:36:12", duration: 1429, mountpoint: "/stream" },
-  { id: "3", ip: "192.168.1.103", userAgent: "Mozilla/5.0 (Android 12; Mobile)", connectedAt: "2023-09-15T12:40:23", duration: 1156, mountpoint: "/high" },
-  { id: "4", ip: "192.168.1.104", userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)", connectedAt: "2023-09-15T12:41:55", duration: 1074, mountpoint: "/stream" },
-  { id: "5", ip: "192.168.1.105", userAgent: "VLC/3.0.16 LibVLC/3.0.16", connectedAt: "2023-09-15T12:45:32", duration: 865, mountpoint: "/high" },
-  { id: "6", ip: "192.168.1.106", userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", connectedAt: "2023-09-15T12:50:08", duration: 621, mountpoint: "/mobile" },
-  { id: "7", ip: "192.168.1.107", userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X)", connectedAt: "2023-09-15T12:53:41", duration: 498, mountpoint: "/stream" },
-];
+import { useServerStats, useListeners, useMountpoints } from "@/hooks/useIcecastApi";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Helper function for formatting duration
 const formatDuration = (seconds: number): string => {
@@ -95,25 +29,50 @@ const formatDuration = (seconds: number): string => {
 const Statistics = () => {
   const [selectedMountpoint, setSelectedMountpoint] = useState<string>("all");
   
-  // Calculate total listeners
-  const totalListeners = mockMountpoints.reduce(
-    (sum, mp) => sum + mp.listeners.current, 0
-  );
+  const { data: statsData, isLoading: statsLoading, error: statsError } = useServerStats();
+  const { data: mountpointsData, isLoading: mountpointsLoading, error: mountpointsError } = useMountpoints();
+  const { data: listenersData, isLoading: listenersLoading, error: listenersError } = useListeners();
 
-  // Calculate peak listeners
-  const peakListeners = mockMountpoints.reduce(
-    (max, mp) => Math.max(max, mp.listeners.peak), 0
-  );
+  // Calculate stats from real data
+  const totalListeners = mountpointsData?.success 
+    ? mountpointsData.data?.reduce((sum, mp) => sum + mp.listeners.current, 0) || 0
+    : 0;
 
-  // Calculate total bandwidth (assuming average bitrate per listener)
-  const totalBandwidth = mockMountpoints.reduce(
-    (sum, mp) => sum + (mp.listeners.current * mp.bitrate), 0
-  );
+  const peakListeners = mountpointsData?.success
+    ? mountpointsData.data?.reduce((max, mp) => Math.max(max, mp.listeners.peak), 0) || 0
+    : 0;
+
+  const totalBandwidth = mountpointsData?.success
+    ? mountpointsData.data?.reduce((sum, mp) => sum + (mp.listeners.current * mp.bitrate), 0) || 0
+    : 0;
   
   // Filter listeners based on selected mountpoint
-  const filteredListeners = selectedMountpoint === "all" 
-    ? mockListeners
-    : mockListeners.filter(listener => listener.mountpoint === selectedMountpoint);
+  const filteredListeners = listenersData?.success
+    ? selectedMountpoint === "all" 
+      ? listenersData.data || []
+      : (listenersData.data || []).filter(listener => listener.mountpoint === selectedMountpoint)
+    : [];
+
+  // Handle loading and error states
+  const isLoading = statsLoading || mountpointsLoading || listenersLoading;
+  const hasError = statsError || mountpointsError || listenersError;
+
+  if (hasError) {
+    return (
+      <DashboardLayout>
+        <PageHeader 
+          heading="Statistics" 
+          text="Track your server usage and listener activity"
+        />
+        <Alert variant="destructive">
+          <AlertTitle>Error loading statistics</AlertTitle>
+          <AlertDescription>
+            {statsError || mountpointsError || listenersError || "Failed to load data. Please check your connection."}
+          </AlertDescription>
+        </Alert>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -125,25 +84,36 @@ const Statistics = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatsCard 
           title="Current Listeners"
-          value={totalListeners}
+          value={isLoading ? <Skeleton className="h-8 w-20" /> : totalListeners}
           icon={<Users size={18} />}
           description="Across all mountpoints"
         />
         <StatsCard 
           title="Peak Listeners"
-          value={peakListeners}
+          value={isLoading ? <Skeleton className="h-8 w-20" /> : peakListeners}
           icon={<Activity size={18} />}
           description="All-time high"
         />
         <StatsCard 
           title="Active Mountpoints"
-          value={mockMountpoints.filter(mp => mp.status === "active").length}
+          value={isLoading 
+            ? <Skeleton className="h-8 w-20" />
+            : (mountpointsData?.success 
+              ? `${(mountpointsData.data || []).filter(mp => mp.status === "active").length}` 
+              : "0")
+          }
           icon={<Radio size={18} />}
-          description={`of ${mockMountpoints.length} total`}
+          description={isLoading 
+            ? <Skeleton className="h-4 w-20" /> 
+            : `of ${mountpointsData?.success ? (mountpointsData.data || []).length : 0} total`
+          }
         />
         <StatsCard 
           title="Total Bandwidth"
-          value={`${(totalBandwidth / 1024).toFixed(2)} Mbps`}
+          value={isLoading 
+            ? <Skeleton className="h-8 w-20" />
+            : `${(totalBandwidth / 1024).toFixed(2)} Mbps`
+          }
           icon={<Activity size={18} />}
           description="Current usage"
         />
@@ -165,13 +135,17 @@ const Statistics = () => {
                   <CardDescription>Real-time list of connected listeners</CardDescription>
                 </div>
                 <div className="w-full md:w-[240px]">
-                  <Select value={selectedMountpoint} onValueChange={setSelectedMountpoint}>
+                  <Select 
+                    value={selectedMountpoint} 
+                    onValueChange={setSelectedMountpoint} 
+                    disabled={isLoading}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select mountpoint" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All mountpoints</SelectItem>
-                      {mockMountpoints.filter(mp => mp.status === "active").map(mp => (
+                      {mountpointsData?.success && mountpointsData.data?.filter(mp => mp.status === "active").map(mp => (
                         <SelectItem key={mp.point} value={mp.point}>{mp.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -180,7 +154,13 @@ const Statistics = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {filteredListeners.length > 0 ? (
+              {isLoading ? (
+                <div className="space-y-2">
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
+                </div>
+              ) : filteredListeners.length > 0 ? (
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -224,7 +204,7 @@ const Statistics = () => {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center text-muted-foreground">
                   <BarChart className="h-8 w-8 mx-auto mb-2" />
-                  <p>Bandwidth charts will be displayed here</p>
+                  <p>Bandwidth chart visualization will be added in a future update</p>
                 </div>
               </div>
             </CardContent>
@@ -241,7 +221,7 @@ const Statistics = () => {
               <div className="flex items-center justify-center h-full">
                 <div className="text-center text-muted-foreground">
                   <Activity className="h-8 w-8 mx-auto mb-2" />
-                  <p>Historical statistics will be displayed here</p>
+                  <p>Historical statistics will be added in a future update</p>
                 </div>
               </div>
             </CardContent>
