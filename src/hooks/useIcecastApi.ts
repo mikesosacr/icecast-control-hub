@@ -1,8 +1,7 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as api from '@/services/api';
 import { toast } from 'sonner';
-import { MountPoint, User, ServerStatus } from '@/types/icecast';
+import { MountPoint, User, ServerStatus, IcecastServer } from '@/types/icecast';
 
 // Server status
 export function useServerStatus(serverId = 'local') {
@@ -283,7 +282,7 @@ export function useServerMutations() {
   const queryClient = useQueryClient();
   
   const addMutation = useMutation({
-    mutationFn: (server: Omit<api.IcecastServer, 'id' | 'status'>) => api.addServer(server),
+    mutationFn: (server: Omit<IcecastServer, 'id' | 'status'>) => api.addServer(server),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['servers'] });
       toast.success('Server added successfully');
@@ -294,7 +293,7 @@ export function useServerMutations() {
   });
   
   const updateMutation = useMutation({
-    mutationFn: ({ serverId, server }: { serverId: string, server: Partial<api.IcecastServer> }) => 
+    mutationFn: ({ serverId, server }: { serverId: string, server: Partial<IcecastServer> }) => 
       api.updateServer(serverId, server),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['servers'] });

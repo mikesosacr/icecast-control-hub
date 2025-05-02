@@ -67,7 +67,7 @@ const Statistics = () => {
         <Alert variant="destructive">
           <AlertTitle>Error loading statistics</AlertTitle>
           <AlertDescription>
-            {statsError || mountpointsError || listenersError || "Failed to load data. Please check your connection."}
+            {String(statsError || mountpointsError || listenersError || "Failed to load data. Please check your connection.")}
           </AlertDescription>
         </Alert>
       </DashboardLayout>
@@ -84,34 +84,34 @@ const Statistics = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatsCard 
           title="Current Listeners"
-          value={isLoading ? <Skeleton className="h-8 w-20" /> : totalListeners}
+          value={isLoading ? undefined : totalListeners}
           icon={<Users size={18} />}
           description="Across all mountpoints"
         />
         <StatsCard 
           title="Peak Listeners"
-          value={isLoading ? <Skeleton className="h-8 w-20" /> : peakListeners}
+          value={isLoading ? undefined : peakListeners}
           icon={<Activity size={18} />}
           description="All-time high"
         />
         <StatsCard 
           title="Active Mountpoints"
           value={isLoading 
-            ? <Skeleton className="h-8 w-20" />
+            ? undefined
             : (mountpointsData?.success 
-              ? `${(mountpointsData.data || []).filter(mp => mp.status === "active").length}` 
-              : "0")
+              ? (mountpointsData.data || []).filter(mp => mp.status === "active").length 
+              : 0)
           }
           icon={<Radio size={18} />}
           description={isLoading 
-            ? <Skeleton className="h-4 w-20" /> 
+            ? undefined 
             : `of ${mountpointsData?.success ? (mountpointsData.data || []).length : 0} total`
           }
         />
         <StatsCard 
           title="Total Bandwidth"
           value={isLoading 
-            ? <Skeleton className="h-8 w-20" />
+            ? undefined
             : `${(totalBandwidth / 1024).toFixed(2)} Mbps`
           }
           icon={<Activity size={18} />}

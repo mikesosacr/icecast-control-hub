@@ -1,4 +1,3 @@
-
 import { 
   IcecastServer, 
   MountPoint, 
@@ -11,6 +10,9 @@ import {
 } from '@/types/icecast';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+
+// Export IcecastServer type to fix type error in useIcecastApi
+export type { IcecastServer };
 
 // Utility function for making API requests
 async function fetchApi<T>(

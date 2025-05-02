@@ -2,12 +2,13 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatsCardProps {
   title: string;
-  value: string | number;
+  value?: string | number;
   icon: ReactNode;
-  description?: string;
+  description?: string | ReactNode;
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
   className?: string;
@@ -36,7 +37,11 @@ export function StatsCard({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold mb-1 truncate">
-          <span className={cn(valueClassName)}>{value}</span>
+          {value !== undefined ? (
+            <span className={cn(valueClassName)}>{value}</span>
+          ) : (
+            <Skeleton className="h-8 w-20" />
+          )}
         </div>
         <div className="flex items-center text-xs">
           {trend && (
@@ -59,7 +64,11 @@ export function StatsCard({
               <span className="ml-1">{trendValue}</span>
             </div>
           )}
-          <span className="text-muted-foreground">{description}</span>
+          {description && (
+            typeof description === 'string' ? 
+              <span className="text-muted-foreground">{description}</span> : 
+              description
+          )}
         </div>
       </CardContent>
     </Card>
