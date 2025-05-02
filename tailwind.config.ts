@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Icecast-specific colors
+				icecast: {
+					'blue': '#0077cc',
+					'light-blue': '#2196f3',
+					'dark-blue': '#005599',
+					'accent': '#33a3ff',
+					'success': '#4caf50',
+					'danger': '#f44336',
+					'warning': '#ffab40',
+					'black': '#333333',
+					'dark-gray': '#555555',
+					'light-gray': '#f5f5f5',
+					'bg-light': '#f9fbfd',
 				}
 			},
 			borderRadius: {
@@ -84,11 +99,20 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-signal': {
+					'0%, 100%': {
+						opacity: '1'
+					},
+					'50%': {
+						opacity: '0.5'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-signal': 'pulse-signal 2s ease-in-out infinite'
 			}
 		}
 	},
