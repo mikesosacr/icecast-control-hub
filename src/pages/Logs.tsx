@@ -54,7 +54,7 @@ const Logs = () => {
       case "info":
         return "default";
       case "warning":
-        return "warning";
+        return "outline";
       case "error":
         return "destructive";
     }

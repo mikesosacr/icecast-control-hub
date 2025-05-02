@@ -7,7 +7,7 @@ import { RefreshCw, Server, Info, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { IcecastServer } from "@/types/icecast";
+import { ServerStatus } from "@/types/icecast";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ const serverInfo = {
   name: "Local Icecast",
   version: "2.4.4",
   startTime: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
-  status: "running" as const,
+  status: "running" as ServerStatus,
 };
 
 const ServerControl = () => {
@@ -75,7 +75,7 @@ const ServerControl = () => {
       // Update server data
       setServerData({
         ...serverData,
-        status: "stopped" as const,
+        status: "stopped",
       });
       
       toast.success("Icecast server stopped successfully");
@@ -95,7 +95,7 @@ const ServerControl = () => {
       // Update server data
       setServerData({
         ...serverData,
-        status: "running" as const,
+        status: "running",
         startTime: new Date(),
       });
       
