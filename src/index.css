@@ -96,3 +96,24 @@
 .status-indicator.warning {
   @apply bg-yellow-500;
 }
+
+/* Text gradient styles */
+.text-gradient {
+  @apply bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 bg-clip-text text-transparent;
+}
+
+/* Animation for the button */
+@keyframes pulse-gentle {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 3s infinite ease-in-out;
+}
