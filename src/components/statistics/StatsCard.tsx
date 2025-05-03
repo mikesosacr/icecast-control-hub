@@ -47,8 +47,8 @@ export function StatsCard({
           {trend && (
             <div className={cn(
               "flex mr-1",
-              trend === "up" && "text-icecast-success",
-              trend === "down" && "text-icecast-danger",
+              trend === "up" && "text-green-500",
+              trend === "down" && "text-red-500",
               trend === "neutral" && "text-muted-foreground"
             )}>
               {trend === "up" && (

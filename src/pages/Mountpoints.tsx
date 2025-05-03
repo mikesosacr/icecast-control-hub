@@ -9,117 +9,57 @@ import { MountpointCard } from "@/components/mountpoints/MountpointCard";
 import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-// Sample data (to be replaced with API calls)
-const mockMountpoints: MountPoint[] = [
-  {
-    id: "1",
-    name: "Main Stream",
-    point: "/stream",
-    type: "audio/mpeg",
-    bitrate: 128,
-    description: "Main radio stream",
-    genre: "Various",
-    streamUrl: "http://example.com/stream",
-    listeners: {
-      current: 87,
-      peak: 156,
-    },
-    streamUser: "source",
-    streamPassword: "hackme",
-    isPublic: true,
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "High Quality",
-    point: "/high",
-    type: "audio/aac",
-    bitrate: 256,
-    description: "High quality AAC stream",
-    genre: "Electronic",
-    streamUrl: "http://example.com/high",
-    listeners: {
-      current: 52,
-      peak: 124,
-    },
-    streamUser: "source2",
-    streamPassword: "hackme2",
-    isPublic: true,
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Low Bandwidth",
-    point: "/mobile",
-    type: "audio/mpeg",
-    bitrate: 64,
-    description: "Low bandwidth stream for mobile",
-    genre: "Talk",
-    streamUrl: "http://example.com/mobile",
-    listeners: {
-      current: 6,
-      peak: 76,
-    },
-    streamUser: "source3",
-    streamPassword: "hackme3",
-    isPublic: false,
-    status: "inactive",
-  },
-  {
-    id: "4",
-    name: "Test Stream",
-    point: "/test",
-    type: "audio/ogg",
-    bitrate: 96,
-    description: "Test stream",
-    genre: "Test",
-    streamUrl: "http://example.com/test",
-    listeners: {
-      current: 0,
-      peak: 12,
-    },
-    streamUser: "source4",
-    streamPassword: "hackme4",
-    isPublic: false,
-    status: "inactive",
-  },
-];
+import { useMountpoints, useMountpointMutations } from "@/hooks/useIcecastApi";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Mountpoints = () => {
-  const [mountpoints, setMountpoints] = useState<MountPoint[]>(mockMountpoints);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  
+  const { data: mountpointsResponse, isLoading, error } = useMountpoints();
+  const { deleteMountpoint, toggleMountpointVisibility } = useMountpointMutations();
 
   const handleEdit = (id: string) => {
-    // Implement edit logic
+    // Navigate to edit page (to be implemented)
     console.log(`Edit mountpoint ${id}`);
   };
 
   const handleDelete = (id: string) => {
-    // Implement delete logic
-    console.log(`Delete mountpoint ${id}`);
-    setMountpoints(mountpoints.filter(mp => mp.id !== id));
+    deleteMountpoint({ mountpointId: id });
   };
 
   const handleToggleVisibility = (id: string, isPublic: boolean) => {
-    // Implement visibility toggle logic
-    console.log(`Toggle visibility of ${id} to ${isPublic}`);
-    setMountpoints(
-      mountpoints.map(mp => 
-        mp.id === id ? { ...mp, isPublic } : mp
-      )
-    );
+    toggleMountpointVisibility({ mountpointId: id, isPublic });
   };
+
+  const mountpoints = mountpointsResponse?.success ? mountpointsResponse.data || [] : [];
 
   const filteredMountpoints = mountpoints.filter(mp => {
     const matchesSearch = mp.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           mp.point.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          mp.description.toLowerCase().includes(searchQuery.toLowerCase());
+                          (mp.description && mp.description.toLowerCase().includes(searchQuery.toLowerCase()));
     
     if (statusFilter === "all") return matchesSearch;
     return matchesSearch && mp.status === statusFilter;
   });
+
+  if (error) {
+    return (
+      <DashboardLayout>
+        <PageHeader 
+          heading="Mountpoints" 
+          text="Create and manage streaming mountpoints"
+        />
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {String(error)}
+          </AlertDescription>
+        </Alert>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -158,7 +98,21 @@ const Mountpoints = () => {
         </div>
       </div>
 
-      {filteredMountpoints.length > 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="rounded-xl border p-6">
+              <Skeleton className="h-6 w-1/2 mb-4" />
+              <Skeleton className="h-4 w-3/4 mb-2" />
+              <div className="space-y-2 mt-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredMountpoints.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredMountpoints.map((mountpoint) => (
             <MountpointCard 
