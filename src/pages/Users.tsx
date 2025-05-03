@@ -9,44 +9,24 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, Trash, Plus, Users as UsersIcon } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-// Sample data
-const mockUsers: User[] = [
-  {
-    id: "1",
-    username: "admin",
-    password: "********",
-    role: "admin",
-    allowedMountpoints: [],
-  },
-  {
-    id: "2",
-    username: "dj_main",
-    password: "********",
-    role: "streamer",
-    allowedMountpoints: ["1", "2"],
-  },
-  {
-    id: "3",
-    username: "dj_weekend",
-    password: "********",
-    role: "streamer",
-    allowedMountpoints: ["1"],
-  }
-];
+import { useUsers, useUserMutations } from "@/hooks/useIcecastApi";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Users = () => {
-  const [users, setUsers] = useState<User[]>(mockUsers);
   const [searchQuery, setSearchQuery] = useState("");
+  const { data: usersResponse, isLoading, error } = useUsers();
+  const { deleteUser } = useUserMutations();
 
   const handleEdit = (id: string) => {
     console.log(`Edit user ${id}`);
   };
 
   const handleDelete = (id: string) => {
-    console.log(`Delete user ${id}`);
-    setUsers(users.filter(user => user.id !== id));
+    deleteUser({ userId: id });
   };
+
+  const users = usersResponse?.success ? usersResponse.data || [] : [];
 
   const filteredUsers = users.filter(user => 
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
@@ -81,7 +61,18 @@ const Users = () => {
             />
           </div>
 
-          {filteredUsers.length > 0 ? (
+          {error ? (
+            <Alert variant="destructive">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{String(error)}</AlertDescription>
+            </Alert>
+          ) : isLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : filteredUsers.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>

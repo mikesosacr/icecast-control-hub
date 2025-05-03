@@ -67,6 +67,7 @@ export interface ServerStats {
   };
   cpu: number; // percentage
   memory: number; // bytes
+  version?: string; // added version field which is optional
 }
 
 export type ServerStatus = 'running' | 'stopped';
