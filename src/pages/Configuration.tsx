@@ -1,45 +1,31 @@
 
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { RefreshCw } from "lucide-react";
-
-const configXmlExample = `<icecast>
-  <location>Earth</location>
-  <admin>icemaster@example.com</admin>
-  <limits>
-    <clients>100</clients>
-    <sources>10</sources>
-    <queue-size>524288</queue-size>
-    <client-timeout>30</client-timeout>
-    <header-timeout>15</header-timeout>
-    <source-timeout>10</source-timeout>
-  </limits>
-  <authentication>
-    <source-password>hackme</source-password>
-    <relay-password>hackme</relay-password>
-    <admin-user>admin</admin-user>
-    <admin-password>hackme</admin-password>
-  </authentication>
-  <listen-socket>
-    <port>8000</port>
-    <bind-address>127.0.0.1</bind-address>
-  </listen-socket>
-  <mount>
-    <mount-name>/example</mount-name>
-    <max-listeners>100</max-listeners>
-    <fallback-mount>/example2.mp3</fallback-mount>
-  </mount>
-</icecast>`;
+import { RefreshCw, AlertCircle, Loader2 } from "lucide-react";
+import { useConfig, useConfigMutation, useServerControl } from "@/hooks/useIcecastApi";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import ConfigurationWizard from "@/components/configuration/ConfigurationWizard";
 
 const Configuration = () => {
-  const [xmlConfig, setXmlConfig] = useState(configXmlExample);
+  const { data: configData, isLoading, error, refetch } = useConfig();
+  const { updateConfig, isUpdating } = useConfigMutation();
+  const { restartServer, isRestarting } = useServerControl();
+  
+  const [xmlConfig, setXmlConfig] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [xmlBackup, setXmlBackup] = useState("");
+  const [activeTab, setActiveTab] = useState<string>("xml");
+  
+  useEffect(() => {
+    if (configData?.success && configData.data) {
+      setXmlConfig(configData.data);
+    }
+  }, [configData]);
   
   const handleEdit = () => {
     setXmlBackup(xmlConfig);
@@ -47,9 +33,7 @@ const Configuration = () => {
   };
 
   const handleSave = () => {
-    // Here we would send the updated config to the backend
-    console.log("Saving configuration:", xmlConfig);
-    // API call would go here to save the config
+    updateConfig({ config: xmlConfig });
     setIsEditing(false);
   };
 
@@ -59,9 +43,28 @@ const Configuration = () => {
   };
 
   const handleRestart = () => {
-    console.log("Restarting Icecast server");
-    // API call would go here to restart the server
+    restartServer();
   };
+  
+  const handleRefresh = () => {
+    refetch();
+  };
+  
+  const handleWizardSave = () => {
+    refetch();
+    setActiveTab("xml");
+  };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-lg">Loading configuration...</span>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -69,17 +72,34 @@ const Configuration = () => {
         heading="Configuration" 
         text="Manage your Icecast server configuration"
       >
-        <Button onClick={handleRestart} variant="outline">
-          <RefreshCw className="mr-1 h-4 w-4" />
-          Restart Server
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleRefresh} variant="outline" disabled={isLoading}>
+            <RefreshCw className={`mr-1 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button onClick={handleRestart} variant="outline" disabled={isRestarting}>
+            <RefreshCw className={`mr-1 h-4 w-4 ${isRestarting ? 'animate-spin' : ''}`} />
+            {isRestarting ? "Restarting..." : "Restart Server"}
+          </Button>
+        </div>
       </PageHeader>
 
-      <Tabs defaultValue="xml">
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            Failed to load configuration: {error}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="xml">XML Configuration</TabsTrigger>
           <TabsTrigger value="wizard">Configuration Wizard</TabsTrigger>
         </TabsList>
+
         <TabsContent value="xml" className="mt-6 space-y-6">
           <Card>
             <CardHeader>
@@ -102,8 +122,10 @@ const Configuration = () => {
                 <div className="flex justify-end gap-2">
                   {isEditing ? (
                     <>
-                      <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-                      <Button onClick={handleSave}>Save Changes</Button>
+                      <Button variant="outline" onClick={handleCancel} disabled={isUpdating}>Cancel</Button>
+                      <Button onClick={handleSave} disabled={isUpdating}>
+                        {isUpdating ? "Saving..." : "Save Changes"}
+                      </Button>
                     </>
                   ) : (
                     <Button onClick={handleEdit}>Edit Configuration</Button>
@@ -123,11 +145,15 @@ const Configuration = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center min-h-[400px]">
-                <p className="text-muted-foreground text-center">
-                  Configuration wizard will be available in a future update.
-                </p>
-              </div>
+              {xmlConfig ? (
+                <ConfigurationWizard currentConfig={xmlConfig} onSave={handleWizardSave} />
+              ) : (
+                <div className="flex flex-col items-center justify-center min-h-[400px]">
+                  <p className="text-muted-foreground text-center">
+                    Could not load configuration data. Please refresh and try again.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
