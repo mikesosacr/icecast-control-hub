@@ -32,7 +32,7 @@ export const configSchema = z.object({
     port: z.coerce.number().int().min(1).max(65535),
     bindAddress: z.string().min(1, "Bind address is required"),
   }),
-  mountPoints: z.array(mountSchema).optional(),
+  mountPoints: z.array(mountSchema).optional().default([]),
 });
 
 export type ConfigFormValues = z.infer<typeof configSchema>;

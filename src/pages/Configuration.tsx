@@ -6,13 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { RefreshCw, AlertCircle, Loader2 } from "lucide-react";
+import { RefreshCw, AlertCircle, Loader2, Server, Download } from "lucide-react";
 import { useConfig, useConfigMutation, useServerControl } from "@/hooks/useIcecastApi";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ConfigurationWizard from "@/components/configuration/ConfigurationWizard";
+import { InstallIcecastModal } from "@/components/configuration/InstallIcecastModal";
+import { icecastService } from "@/services/icecastService";
+import { toast } from "sonner";
 
 const Configuration = () => {
-  const { data: configData, isLoading, error, refetch } = useConfig();
+  const { data: configData, isLoading, error, refetch } = useConfig('local');
   const { updateConfig, isUpdating } = useConfigMutation();
   const { restartServer, isRestarting } = useServerControl();
   
@@ -20,6 +23,29 @@ const Configuration = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [xmlBackup, setXmlBackup] = useState("");
   const [activeTab, setActiveTab] = useState<string>("xml");
+  
+  // Built-in server management
+  const [serverInstalled, setServerInstalled] = useState<boolean | undefined>(undefined);
+  const [isCheckingServer, setIsCheckingServer] = useState(true);
+  const [installModalOpen, setInstallModalOpen] = useState(false);
+  
+  // Check if Icecast is installed
+  useEffect(() => {
+    const checkServer = async () => {
+      setIsCheckingServer(true);
+      try {
+        const status = await icecastService.getInstallationStatus();
+        setServerInstalled(status.installed);
+      } catch (error) {
+        console.error("Failed to check server status:", error);
+        setServerInstalled(false);
+      } finally {
+        setIsCheckingServer(false);
+      }
+    };
+    
+    checkServer();
+  }, []);
   
   useEffect(() => {
     if (configData?.success && configData.data) {
@@ -54,6 +80,12 @@ const Configuration = () => {
     refetch();
     setActiveTab("xml");
   };
+  
+  const handleInstallComplete = () => {
+    toast.success("Icecast server has been installed successfully");
+    setServerInstalled(true);
+    refetch();
+  };
 
   if (isLoading) {
     return (
@@ -79,12 +111,46 @@ const Configuration = () => {
             <RefreshCw className={`mr-1 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button onClick={handleRestart} variant="outline" disabled={isRestarting}>
-            <RefreshCw className={`mr-1 h-4 w-4 ${isRestarting ? 'animate-spin' : ''}`} />
-            {isRestarting ? "Restarting..." : "Restart Server"}
-          </Button>
+          
+          {serverInstalled === false && !isCheckingServer && (
+            <Button 
+              onClick={() => setInstallModalOpen(true)} 
+              variant="default"
+            >
+              <Download className="mr-1 h-4 w-4" />
+              Install Built-in Server
+            </Button>
+          )}
+          
+          {serverInstalled && (
+            <Button onClick={handleRestart} variant="outline" disabled={isRestarting}>
+              <RefreshCw className={`mr-1 h-4 w-4 ${isRestarting ? 'animate-spin' : ''}`} />
+              {isRestarting ? "Restarting..." : "Restart Server"}
+            </Button>
+          )}
         </div>
       </PageHeader>
+
+      {isCheckingServer && (
+        <Alert className="mb-6">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <AlertTitle>Checking server status...</AlertTitle>
+          <AlertDescription>
+            Verifying if the built-in Icecast server is available
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!isCheckingServer && serverInstalled === false && (
+        <Alert className="mb-6">
+          <Server className="h-4 w-4" />
+          <AlertTitle>Icecast Server Not Installed</AlertTitle>
+          <AlertDescription>
+            The built-in Icecast server is not installed or cannot be detected. 
+            You can install it for easier management or configure an external Icecast server.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {errorMessage && (
         <Alert variant="destructive" className="mb-6">
@@ -160,6 +226,12 @@ const Configuration = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      <InstallIcecastModal 
+        open={installModalOpen}
+        onOpenChange={setInstallModalOpen}
+        onInstallComplete={handleInstallComplete}
+      />
     </DashboardLayout>
   );
 };

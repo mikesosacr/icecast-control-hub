@@ -56,8 +56,8 @@ const ConfigurationWizard = ({ currentConfig, onSave }: ConfigurationWizardProps
           port: data.listen.port,
           bindAddress: data.listen.bindAddress,
         },
-        // Use empty array if mountPoints is undefined to fix the type issue
-        mountPoints: data.mountPoints || [],
+        // Make sure mountPoints is always an array and all mount points have required fields
+        mountPoints: data.mountPoints?.filter(mp => mp.mountName) || [],
       };
       
       const xmlConfig = configToXml(config);

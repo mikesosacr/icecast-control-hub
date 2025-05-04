@@ -1,5 +1,5 @@
 
-import { xmlToJson, jsonToXml } from './xml-utils';
+import { xmlToJson as convertXmlToJson, jsonToXml as convertJsonToXml } from './xml-utils';
 
 interface Mount {
   mountName: string;
@@ -55,12 +55,17 @@ export function parseXmlToConfig(xmlString: string): IcecastConfig {
       
       while ((mountMatch = mountRegex.exec(xml)) !== null) {
         const mountXml = mountMatch[1];
-        const mount: Mount = {
-          mountName: parseSimpleValue(mountXml, 'mount-name'),
-          maxListeners: parseInt(parseSimpleValue(mountXml, 'max-listeners'), 10) || undefined,
-          fallbackMount: parseSimpleValue(mountXml, 'fallback-mount') || undefined,
-        };
-        mounts.push(mount);
+        const mountName = parseSimpleValue(mountXml, 'mount-name');
+        
+        // Only add mount points with a valid mount name
+        if (mountName) {
+          const mount: Mount = {
+            mountName,
+            maxListeners: parseInt(parseSimpleValue(mountXml, 'max-listeners'), 10) || undefined,
+            fallbackMount: parseSimpleValue(mountXml, 'fallback-mount') || undefined,
+          };
+          mounts.push(mount);
+        }
       }
       
       return mounts;
@@ -150,15 +155,17 @@ export function configToXml(config: IcecastConfig): string {
     // Mount points
     if (config.mountPoints && config.mountPoints.length > 0) {
       config.mountPoints.forEach(mount => {
-        xml += `  <mount>\n`;
-        xml += `    <mount-name>${mount.mountName}</mount-name>\n`;
-        if (mount.maxListeners) {
-          xml += `    <max-listeners>${mount.maxListeners}</max-listeners>\n`;
+        if (mount.mountName) {  // Ensure mountName is defined
+          xml += `  <mount>\n`;
+          xml += `    <mount-name>${mount.mountName}</mount-name>\n`;
+          if (mount.maxListeners) {
+            xml += `    <max-listeners>${mount.maxListeners}</max-listeners>\n`;
+          }
+          if (mount.fallbackMount) {
+            xml += `    <fallback-mount>${mount.fallbackMount}</fallback-mount>\n`;
+          }
+          xml += `  </mount>\n`;
         }
-        if (mount.fallbackMount) {
-          xml += `    <fallback-mount>${mount.fallbackMount}</fallback-mount>\n`;
-        }
-        xml += `  </mount>\n`;
       });
     }
     
@@ -170,5 +177,5 @@ export function configToXml(config: IcecastConfig): string {
   }
 }
 
-// Use the imported utility functions for more advanced XML operations
-export { xmlToJson, jsonToXml };
+// Use the imported utility functions for XML operations
+export { convertXmlToJson as xmlToJson, convertJsonToXml as jsonToXml };
