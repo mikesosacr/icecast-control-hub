@@ -10,58 +10,21 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// Sample data
-const mockServers: IcecastServer[] = [
-  {
-    id: "local",
-    name: "Local Server",
-    host: "localhost",
-    port: 8000,
-    adminUsername: "admin",
-    adminPassword: "hackme",
-    isLocal: true,
-    status: "online",
-  },
-  {
-    id: "remote1",
-    name: "Production Server",
-    host: "icecast.example.com",
-    port: 8000,
-    adminUsername: "admin",
-    adminPassword: "******",
-    isLocal: false,
-    status: "online",
-  },
-  {
-    id: "remote2",
-    name: "Backup Server",
-    host: "backup.example.com",
-    port: 8000,
-    adminUsername: "admin",
-    adminPassword: "******",
-    isLocal: false,
-    status: "offline",
-  },
-  {
-    id: "remote3",
-    name: "Test Server",
-    host: "test.example.com",
-    port: 8000,
-    adminUsername: "admin",
-    adminPassword: "******",
-    isLocal: false,
-    status: "warning",
-  },
-];
+import { useServers, useServerMutations } from "@/hooks/useIcecastApi";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useNavigate } from "react-router-dom";
 
 const RemoteServers = () => {
-  const [servers, setServers] = useState<IcecastServer[]>(mockServers);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { data: serversResponse, isLoading, error, refetch } = useServers();
+  const { deleteServer } = useServerMutations();
+  const navigate = useNavigate();
 
   const handleEdit = (id: string) => {
     console.log(`Edit server ${id}`);
-    // Implement edit server logic
+    // In a real implementation, this would navigate to an edit form
+    // navigate(`/remote-servers/${id}/edit`);
   };
 
   const handleDelete = (id: string) => {
@@ -73,24 +36,36 @@ const RemoteServers = () => {
       return;
     }
     
-    // Remove the server from the list
-    setServers(servers.filter(server => server.id !== id));
-    toast.success("Server removed successfully");
+    // Remove the server using the API
+    deleteServer(id);
   };
 
-  const handleRefreshStatus = () => {
+  const handleRefreshStatus = async () => {
     setIsRefreshing(true);
     
-    // Simulate refreshing server statuses
-    setTimeout(() => {
+    try {
+      await refetch();
       toast.success("Server statuses refreshed");
+    } catch (error) {
+      toast.error("Failed to refresh server statuses");
+      console.error("Error refreshing server statuses:", error);
+    } finally {
       setIsRefreshing(false);
-    }, 2000);
+    }
   };
+
+  // Get servers from API response
+  const servers = serversResponse?.success ? serversResponse.data || [] : [];
 
   // Filter servers by type
   const localServer = servers.find(server => server.isLocal);
   const remoteServers = servers.filter(server => !server.isLocal);
+
+  const handleAddServer = () => {
+    // In a real implementation, this would navigate to an add server form
+    // navigate('/remote-servers/new');
+    toast.info("Add server functionality will be implemented soon");
+  };
 
   return (
     <DashboardLayout>
@@ -103,66 +78,136 @@ const RemoteServers = () => {
             <RefreshCw className={cn("mr-1 h-4 w-4", isRefreshing && "animate-spin")} />
             <span>{isRefreshing ? "Refreshing..." : "Refresh Status"}</span>
           </Button>
-          <Button>
+          <Button onClick={handleAddServer}>
             <Plus className="mr-1 h-4 w-4" />
             <span>Add Server</span>
           </Button>
         </div>
       </PageHeader>
 
-      <Tabs defaultValue="all">
-        <TabsList>
-          <TabsTrigger value="all">All Servers</TabsTrigger>
-          <TabsTrigger value="local">Local Server</TabsTrigger>
-          <TabsTrigger value="remote">Remote Servers</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all" className="mt-6 space-y-6">
-          {servers.map((server) => (
-            <ServerCard
-              key={server.id}
-              server={server}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
+      {error ? (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>
+            {String(error)}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRefreshStatus} 
+              className="ml-2"
+              disabled={isRefreshing}
+            >
+              Try Again
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : isLoading ? (
+        <div className="space-y-6">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <Skeleton className="h-6 w-1/3 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent className="py-4">
+                <div className="grid grid-cols-2 gap-y-2">
+                  {[...Array(5)].map((_, j) => (
+                    <div key={j} className="col-span-2 flex justify-between">
+                      <Skeleton className="h-4 w-1/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter className="border-t bg-muted/30 pt-3">
+                <div className="flex justify-between w-full">
+                  <Skeleton className="h-8 w-24" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-8 w-8" />
+                    <Skeleton className="h-8 w-8" />
+                  </div>
+                </div>
+              </CardFooter>
+            </Card>
           ))}
-        </TabsContent>
-        
-        <TabsContent value="local" className="mt-6">
-          {localServer && (
-            <ServerCard
-              server={localServer}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          )}
-        </TabsContent>
-        
-        <TabsContent value="remote" className="mt-6 space-y-6">
-          {remoteServers.length > 0 ? (
-            remoteServers.map((server) => (
+        </div>
+      ) : (
+        <Tabs defaultValue="all">
+          <TabsList>
+            <TabsTrigger value="all">All Servers</TabsTrigger>
+            <TabsTrigger value="local">Local Server</TabsTrigger>
+            <TabsTrigger value="remote">Remote Servers</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="all" className="mt-6 space-y-6">
+            {servers.length > 0 ? (
+              servers.map((server) => (
+                <ServerCard
+                  key={server.id}
+                  server={server}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center min-h-[200px] bg-muted/30 rounded-md border border-dashed p-8 text-center">
+                <Server className="h-10 w-10 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Servers Found</h3>
+                <p className="text-muted-foreground mb-4">
+                  You haven't added any servers yet
+                </p>
+                <Button onClick={handleAddServer}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  <span>Add Server</span>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="local" className="mt-6">
+            {localServer ? (
               <ServerCard
-                key={server.id}
-                server={server}
+                server={localServer}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
               />
-            ))
-          ) : (
-            <div className="flex flex-col items-center justify-center min-h-[200px] bg-muted/30 rounded-md border border-dashed p-8 text-center">
-              <Globe className="h-10 w-10 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Remote Servers</h3>
-              <p className="text-muted-foreground mb-4">
-                You haven't added any remote servers yet
-              </p>
-              <Button>
-                <Plus className="mr-1 h-4 w-4" />
-                <span>Add Remote Server</span>
-              </Button>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            ) : (
+              <div className="flex flex-col items-center justify-center min-h-[200px] bg-muted/30 rounded-md border border-dashed p-8 text-center">
+                <Server className="h-10 w-10 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Local Server</h3>
+                <p className="text-muted-foreground mb-4">
+                  The local Icecast server is not configured
+                </p>
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="remote" className="mt-6 space-y-6">
+            {remoteServers.length > 0 ? (
+              remoteServers.map((server) => (
+                <ServerCard
+                  key={server.id}
+                  server={server}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center min-h-[200px] bg-muted/30 rounded-md border border-dashed p-8 text-center">
+                <Globe className="h-10 w-10 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Remote Servers</h3>
+                <p className="text-muted-foreground mb-4">
+                  You haven't added any remote servers yet
+                </p>
+                <Button onClick={handleAddServer}>
+                  <Plus className="mr-1 h-4 w-4" />
+                  <span>Add Remote Server</span>
+                </Button>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      )}
     </DashboardLayout>
   );
 };
