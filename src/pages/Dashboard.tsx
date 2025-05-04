@@ -1,38 +1,16 @@
+
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsCard } from "@/components/statistics/StatsCard";
-import { Activity, Radio, Users, BarChart, Server } from "lucide-react";
+import { Activity, Radio, Users, Server } from "lucide-react";
 import { Link } from "react-router-dom";
-import { MountpointCard } from "@/components/mountpoints/MountpointCard";
-import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useServerStats, useMountpoints, useMountpointMutations } from "@/hooks/useIcecastApi";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-// Helper functions
-const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-const formatDuration = (seconds: number): string => {
-  const days = Math.floor(seconds / (3600 * 24));
-  const hours = Math.floor((seconds % (3600 * 24)) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  
-  const parts = [];
-  if (days > 0) parts.push(`${days}d`);
-  if (hours > 0) parts.push(`${hours}h`);
-  if (minutes > 0) parts.push(`${minutes}m`);
-  
-  return parts.join(' ');
-};
+import { ResourceUsage } from "@/components/dashboard/ResourceUsage";
+import { ServerInfo } from "@/components/dashboard/ServerInfo";
+import { ActiveMountpoints } from "@/components/dashboard/ActiveMountpoints";
+import { formatBytes, formatDuration } from "@/utils/formatters";
 
 const Dashboard = () => {
   const { data: statsResponse, isLoading: statsLoading, error: statsError } = useServerStats();
@@ -119,183 +97,16 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Server Resource Usage</CardTitle>
-              <CardDescription>
-                Current system resource utilization
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {isLoading || !stats ? (
-                <div className="space-y-6">
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-full" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">CPU Usage</span>
-                      <span className="font-medium">{stats.cpu}%</span>
-                    </div>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Progress value={stats.cpu} className="h-2" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          CPU: {stats.cpu}%
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Memory Usage</span>
-                      <span className="font-medium">{formatBytes(stats.memory)}</span>
-                    </div>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Progress value={(stats.memory / (512 * 1024 * 1024)) * 100} className="h-2" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Memory: {formatBytes(stats.memory)}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Bandwidth Usage</span>
-                      <span className="font-medium">{formatBytes(stats.bandwidth.outgoing)}/s</span>
-                    </div>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Progress value={(stats.bandwidth.outgoing / (10 * 1024 * 1024)) * 100} className="h-2" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Bandwidth: {formatBytes(stats.bandwidth.outgoing)}/s
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle>Active Listeners</CardTitle>
-                <BarChart size={16} className="text-muted-foreground" />
-              </div>
-              <CardDescription>Listener trends over the past 24 hours</CardDescription>
-            </CardHeader>
-            <CardContent className="h-[220px] flex items-center justify-center">
-              <div className="text-muted-foreground text-center p-6 border border-dashed rounded-md w-full">
-                <p>Listener chart will be displayed here</p>
-                <p className="text-sm">Data will be available when the history API is implemented</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
+        <ResourceUsage stats={stats} isLoading={isLoading} />
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Active Mountpoints</CardTitle>
-              <CardDescription>
-                Recent activity on your streams
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {isLoading ? (
-                <div className="space-y-4">
-                  <Skeleton className="h-40 w-full" />
-                  <Skeleton className="h-40 w-full" />
-                </div>
-              ) : mountpoints.filter(mp => mp.status === "active").length > 0 ? (
-                mountpoints
-                  .filter(mp => mp.status === "active")
-                  .slice(0, 2)
-                  .map(mountpoint => (
-                    <MountpointCard 
-                      key={mountpoint.id} 
-                      mountpoint={mountpoint} 
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onToggleVisibility={handleToggleVisibility}
-                    />
-                  ))
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No active mountpoints found
-                </div>
-              )}
-            </CardContent>
-            <CardFooter className="border-t pt-4">
-              <Button variant="ghost" size="sm" className="w-full" asChild>
-                <Link to="/mountpoints">View All Mountpoints</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Server Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoading || !stats ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              ) : (
-                <div className="space-y-3 text-sm">
-                  <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Version</div>
-                    <div className="font-medium">Icecast {stats.version || "2.x"}</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Total Connections</div>
-                    <div className="font-medium">{stats.totalConnections?.toLocaleString() || "N/A"}</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Current Connections</div>
-                    <div className="font-medium">{stats.connections?.current || "N/A"}</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Peak Connections</div>
-                    <div className="font-medium">{stats.connections?.peak || "N/A"}</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Incoming Bandwidth</div>
-                    <div className="font-medium">{formatBytes(stats.bandwidth?.incoming || 0)}/s</div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    <div className="text-muted-foreground">Server Type</div>
-                    <div className="font-medium">Local Instance</div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-            <CardFooter className="border-t pt-4">
-              <Button variant="outline" size="sm" className="w-full" asChild>
-                <Link to="/configuration">View Configuration</Link>
-              </Button>
-            </CardFooter>
-          </Card>
+          <ActiveMountpoints 
+            mountpoints={mountpoints}
+            isLoading={isLoading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onToggleVisibility={handleToggleVisibility}
+          />
+          <ServerInfo stats={stats} isLoading={isLoading} />
         </div>
       </div>
     </DashboardLayout>
