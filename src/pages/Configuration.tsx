@@ -26,7 +26,7 @@ const Configuration = () => {
   }, [configData]);
   
   const handleRestart = () => {
-    restartServer('local');  // Added the 'local' argument here
+    restartServer('local');
   };
   
   const handleRefresh = () => {
@@ -38,7 +38,7 @@ const Configuration = () => {
   };
   
   const handleXmlUpdate = (newXmlConfig: string) => {
-    updateConfig({ config: newXmlConfig });
+    updateConfig({ config: newXmlConfig, serverId: 'local' });
     setXmlConfig(newXmlConfig);
   };
   
