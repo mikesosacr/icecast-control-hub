@@ -1,6 +1,6 @@
 
 import React from "react";
-import { UseFormReturn, useFieldArray } from "react-hook-form";
+import { UseFormReturn } from "react-hook-form";
 import { ConfigFormValues } from "../schema/config-schema";
 import { Button } from "@/components/ui/button";
 import { FormDescription } from "@/components/ui/form";
@@ -8,6 +8,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { useFieldArray } from "react-hook-form";
 
 interface MountPointsSectionProps {
   form: UseFormReturn<ConfigFormValues>;

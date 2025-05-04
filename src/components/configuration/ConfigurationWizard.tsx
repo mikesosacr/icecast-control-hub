@@ -56,8 +56,11 @@ const ConfigurationWizard = ({ currentConfig, onSave }: ConfigurationWizardProps
           port: data.listen.port,
           bindAddress: data.listen.bindAddress,
         },
-        // Make sure mountPoints is always an array and all mount points have required fields
-        mountPoints: data.mountPoints?.filter(mp => mp && mp.mountName) || [],
+        // Make sure mountPoints is always an array and all mount points have required mountName
+        mountPoints: (data.mountPoints || [])
+          .filter((mp): mp is {mountName: string; maxListeners?: number; fallbackMount?: string} => 
+            Boolean(mp && mp.mountName)
+          ),
       };
       
       const xmlConfig = configToXml(config);
