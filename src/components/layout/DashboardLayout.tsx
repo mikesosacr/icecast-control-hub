@@ -1,36 +1,77 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Toaster } from "@/components/ui/sonner";
-import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { 
+  Menubar, 
+  MenubarContent, 
+  MenubarItem, 
+  MenubarMenu, 
+  MenubarTrigger 
+} from "@/components/ui/menubar";
+import { Link, Outlet } from 'react-router-dom';
 
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-}
-
-const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-
+const DashboardLayout = () => {
   return (
-    <SidebarProvider defaultOpen={sidebarOpen} open={sidebarOpen} onOpenChange={setSidebarOpen}>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
-        <div className="flex-1 p-4 md:p-6">
-          <div className="container mx-auto max-w-7xl">
-            <div className="md:hidden mb-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-2" 
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-              >
-                <Menu className="h-4 w-4" />
-                {sidebarOpen ? "Ocultar menú" : "Mostrar menú"}
-              </Button>
+        <div className="flex-1 flex flex-col">
+          <div className="border-b">
+            <div className="container mx-auto px-4">
+              <Menubar className="border-none px-0">
+                <MenubarMenu>
+                  <MenubarTrigger>Archivo</MenubarTrigger>
+                  <MenubarContent>
+                    <MenubarItem asChild>
+                      <Link to="/dashboard">Dashboard</Link>
+                    </MenubarItem>
+                    <MenubarItem asChild>
+                      <Link to="/configuration">Configuración</Link>
+                    </MenubarItem>
+                  </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                  <MenubarTrigger>Ver</MenubarTrigger>
+                  <MenubarContent>
+                    <MenubarItem asChild>
+                      <Link to="/mountpoints">Puntos de montaje</Link>
+                    </MenubarItem>
+                    <MenubarItem asChild>
+                      <Link to="/statistics">Estadísticas</Link>
+                    </MenubarItem>
+                    <MenubarItem asChild>
+                      <Link to="/logs">Registros</Link>
+                    </MenubarItem>
+                  </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                  <MenubarTrigger>Sistema</MenubarTrigger>
+                  <MenubarContent>
+                    <MenubarItem asChild>
+                      <Link to="/server-control">Control de servidor</Link>
+                    </MenubarItem>
+                    <MenubarItem asChild>
+                      <Link to="/remote-servers">Servidores remotos</Link>
+                    </MenubarItem>
+                  </MenubarContent>
+                </MenubarMenu>
+                <MenubarMenu>
+                  <MenubarTrigger>Usuarios</MenubarTrigger>
+                  <MenubarContent>
+                    <MenubarItem asChild>
+                      <Link to="/users">Gestionar usuarios</Link>
+                    </MenubarItem>
+                  </MenubarContent>
+                </MenubarMenu>
+              </Menubar>
             </div>
-            {children}
+          </div>
+          <div className="p-4 md:p-6 flex-1">
+            <div className="container mx-auto max-w-7xl">
+              <Outlet />
+            </div>
           </div>
         </div>
       </div>

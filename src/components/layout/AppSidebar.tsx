@@ -9,9 +9,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   Sidebar,
-  SidebarTrigger,
-  SidebarFooter,
-  useSidebar
+  SidebarFooter
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -23,19 +21,15 @@ import {
   Settings,
   RefreshCw, 
   Server, 
-  Globe,
-  ChevronLeft,
-  ChevronRight
+  Globe
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
 export function AppSidebar() {
   const location = useLocation();
   const [serverStatus, setServerStatus] = useState<'online' | 'offline' | 'warning'>('online');
-  const { open, setOpen, toggleSidebar } = useSidebar();
   
   const navigationItems = [
     {
@@ -85,7 +79,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="sidebar" side="left" collapsible="icon">
-      <SidebarHeader className="px-6 py-3 flex items-center gap-2 relative">
+      <SidebarHeader className="px-6 py-3 flex items-center gap-2">
         <div className="relative h-8 w-8 mr-1">
           <div className="h-full w-full bg-white rounded-md flex items-center justify-center">
             <svg 
@@ -113,17 +107,6 @@ export function AppSidebar() {
           <span className="font-bold text-sidebar-foreground text-lg">Icecast</span>
           <span className="text-sidebar-foreground/70 text-xs">Control Hub</span>
         </div>
-        
-        {/* Toggle button for sidebar */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute right-2 top-1/2 -translate-y-1/2 ml-auto hidden md:flex"
-          onClick={toggleSidebar}
-          aria-label={open ? "Colapsar menú" : "Expandir menú"}
-        >
-          {open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-        </Button>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

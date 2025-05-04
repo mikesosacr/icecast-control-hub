@@ -1,5 +1,4 @@
 
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/statistics/StatsCard";
@@ -43,7 +42,7 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <DashboardLayout>
+      <>
         <PageHeader 
           heading="Dashboard" 
           text="Overview of your Icecast server status and performance"
@@ -54,12 +53,12 @@ const Dashboard = () => {
             {String(error)}
           </AlertDescription>
         </Alert>
-      </DashboardLayout>
+      </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader 
         heading="Dashboard" 
         text="Overview of your Icecast server status and performance"
@@ -109,7 +108,7 @@ const Dashboard = () => {
           <ServerInfo stats={stats} isLoading={isLoading} />
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 };
 
