@@ -26,7 +26,7 @@ const Configuration = () => {
   }, [configData]);
   
   const handleRestart = () => {
-    restartServer();
+    restartServer('local');  // Added the 'local' argument here
   };
   
   const handleRefresh = () => {
