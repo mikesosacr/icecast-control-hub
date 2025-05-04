@@ -10,7 +10,8 @@ import {
   SidebarMenuItem,
   Sidebar,
   SidebarTrigger,
-  SidebarFooter
+  SidebarFooter,
+  useSidebar
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -22,15 +23,19 @@ import {
   Settings,
   RefreshCw, 
   Server, 
-  Globe
+  Globe,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export function AppSidebar() {
   const location = useLocation();
   const [serverStatus, setServerStatus] = useState<'online' | 'offline' | 'warning'>('online');
+  const { open, setOpen, toggleSidebar } = useSidebar();
   
   const navigationItems = [
     {
@@ -80,7 +85,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="px-6 py-3 flex items-center gap-2">
+      <SidebarHeader className="px-6 py-3 flex items-center gap-2 relative">
         <div className="relative h-8 w-8 mr-1">
           <div className="h-full w-full bg-white rounded-md flex items-center justify-center">
             <svg 
@@ -111,6 +116,17 @@ export function AppSidebar() {
         <div className="ml-auto">
           <SidebarTrigger />
         </div>
+        
+        {/* Desktop collapse button (only shown on desktop) */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:flex"
+          onClick={toggleSidebar}
+          aria-label={open ? "Colapsar menú" : "Expandir menú"}
+        >
+          {open ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </Button>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
