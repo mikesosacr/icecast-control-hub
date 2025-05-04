@@ -57,7 +57,7 @@ const ConfigurationWizard = ({ currentConfig, onSave }: ConfigurationWizardProps
           bindAddress: data.listen.bindAddress,
         },
         // Make sure mountPoints is always an array and all mount points have required fields
-        mountPoints: data.mountPoints?.filter(mp => mp.mountName) || [],
+        mountPoints: data.mountPoints?.filter(mp => mp && mp.mountName) || [],
       };
       
       const xmlConfig = configToXml(config);
