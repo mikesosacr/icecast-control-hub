@@ -84,7 +84,7 @@ export function AppSidebar() {
   ];
 
   return (
-    <Sidebar>
+    <Sidebar variant="sidebar" side="left" collapsible="icon">
       <SidebarHeader className="px-6 py-3 flex items-center gap-2 relative">
         <div className="relative h-8 w-8 mr-1">
           <div className="h-full w-full bg-white rounded-md flex items-center justify-center">
@@ -113,15 +113,12 @@ export function AppSidebar() {
           <span className="font-bold text-sidebar-foreground text-lg">Icecast</span>
           <span className="text-sidebar-foreground/70 text-xs">Control Hub</span>
         </div>
-        <div className="ml-auto">
-          <SidebarTrigger />
-        </div>
         
-        {/* Desktop collapse button (only shown on desktop) */}
+        {/* Toggle button for sidebar */}
         <Button
           variant="ghost"
           size="sm"
-          className="absolute right-2 top-1/2 -translate-y-1/2 hidden md:flex"
+          className="absolute right-2 top-1/2 -translate-y-1/2 ml-auto hidden md:flex"
           onClick={toggleSidebar}
           aria-label={open ? "Colapsar menú" : "Expandir menú"}
         >
@@ -151,10 +148,14 @@ export function AppSidebar() {
             <SidebarMenu>
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.path}>
-                    <Link to={item.path}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={location.pathname === item.path}
+                    tooltip={item.title}
+                  >
+                    <Link to={item.path} className="flex items-center gap-2 w-full">
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      <span className="text-sm font-medium">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -168,10 +169,14 @@ export function AppSidebar() {
             <SidebarMenu>
               {serverManagementItems.map((item) => (
                 <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.path}>
-                    <Link to={item.path}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                  <SidebarMenuButton 
+                    asChild 
+                    isActive={location.pathname === item.path}
+                    tooltip={item.title}
+                  >
+                    <Link to={item.path} className="flex items-center gap-2 w-full">
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      <span className="text-sm font-medium">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
