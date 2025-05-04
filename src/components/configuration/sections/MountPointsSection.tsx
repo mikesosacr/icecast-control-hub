@@ -1,6 +1,6 @@
 
 import React from "react";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, useFieldArray } from "react-hook-form";
 import { ConfigFormValues } from "../schema/config-schema";
 import { Button } from "@/components/ui/button";
 import { FormDescription } from "@/components/ui/form";
@@ -14,7 +14,8 @@ interface MountPointsSectionProps {
 }
 
 export const MountPointsSection = ({ form }: MountPointsSectionProps) => {
-  const { fields, append, remove } = form.useFieldArray({
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
     name: "mountPoints",
   });
 
