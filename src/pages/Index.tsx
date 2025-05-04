@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BarChart2, Layers, Radio, Shield } from "lucide-react";
+import { ArrowRight, BarChart2, Layers, Radio, Shield, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
@@ -21,21 +21,25 @@ const Index = () => {
             icon={<BarChart2 className="h-8 w-8" />}
             title="Estadísticas en tiempo real"
             description="Monitorea oyentes, uso del ancho de banda y rendimiento del servidor con estadísticas detalladas."
+            linkTo="/statistics"
           />
           <FeatureCard 
             icon={<Radio className="h-8 w-8" />}
             title="Gestión de puntos de montaje"
             description="Administra tus streams fácilmente con controles intuitivos para crear, editar y eliminar puntos de montaje."
+            linkTo="/mountpoints"
           />
           <FeatureCard 
             icon={<Shield className="h-8 w-8" />}
             title="Control de acceso"
             description="Gestiona usuarios y permisos para mantener tu servidor seguro en todo momento."
+            linkTo="/users"
           />
           <FeatureCard 
-            icon={<Layers className="h-8 w-8" />}
+            icon={<Settings className="h-8 w-8" />}
             title="Configuración avanzada"
             description="Personaliza cada aspecto de tu servidor Icecast2 a través de una interfaz amigable."
+            linkTo="/configuration"
           />
         </div>
 
@@ -54,15 +58,17 @@ const Index = () => {
 };
 
 // Feature card component
-const FeatureCard = ({ icon, title, description }) => {
+const FeatureCard = ({ icon, title, description, linkTo }) => {
   return (
-    <div className="rounded-xl border bg-card p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
-      <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
-        {icon}
+    <Link to={linkTo} className="block">
+      <div className="rounded-xl border bg-card p-6 shadow-sm hover:shadow-md transition-shadow duration-300 h-full">
+        <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary mb-4">
+          {icon}
+        </div>
+        <h3 className="text-xl font-semibold mb-2">{title}</h3>
+        <p className="text-muted-foreground">{description}</p>
       </div>
-      <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-muted-foreground">{description}</p>
-    </div>
+    </Link>
   );
 };
 

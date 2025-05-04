@@ -19,10 +19,10 @@ import {
   Users, 
   Activity, 
   FileText, 
+  Settings,
   RefreshCw, 
   Server, 
-  Globe,
-  Settings 
+  Globe
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -35,7 +35,7 @@ export function AppSidebar() {
   const navigationItems = [
     {
       title: "Dashboard",
-      path: "/",
+      path: "/dashboard",
       icon: Home,
     },
     {
@@ -61,30 +61,20 @@ export function AppSidebar() {
     {
       title: "Configuration",
       path: "/configuration",
-      icon: FileText,
+      icon: Settings,
     },
   ];
 
   const serverManagementItems = [
     {
-      title: "Restart Service",
-      path: "/restart",
+      title: "Server Control",
+      path: "/server-control",
       icon: RefreshCw,
     },
     {
-      title: "Local Server",
-      path: "/server/local",
-      icon: Server,
-    },
-    {
       title: "Remote Servers",
-      path: "/server/remote",
+      path: "/remote-servers", 
       icon: Globe,
-    },
-    {
-      title: "Settings",
-      path: "/settings",
-      icon: Settings,
     },
   ];
 
@@ -127,10 +117,10 @@ export function AppSidebar() {
           <div className="px-4 py-2.5">
             <div className="flex items-center gap-2 px-2">
               <div className={cn(
-                "status-indicator",
-                serverStatus === "online" && "online",
-                serverStatus === "offline" && "offline",
-                serverStatus === "warning" && "warning"
+                "h-2 w-2 rounded-full",
+                serverStatus === "online" && "bg-green-500",
+                serverStatus === "offline" && "bg-red-500",
+                serverStatus === "warning" && "bg-yellow-500"
               )}/>
               <span className="text-sidebar-foreground/80 text-sm">
                 Server Status:
