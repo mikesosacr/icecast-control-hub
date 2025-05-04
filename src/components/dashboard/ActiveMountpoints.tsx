@@ -4,10 +4,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MountpointCard } from "@/components/mountpoints/MountpointCard";
-import { Mountpoint } from "@/types/icecast";
+import { MountPoint } from "@/types/icecast";
 
 interface ActiveMountpointsProps {
-  mountpoints: Mountpoint[];
+  mountpoints: MountPoint[];
   isLoading: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
