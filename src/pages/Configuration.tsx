@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,8 @@ const Configuration = () => {
     );
   }
 
+  const errorMessage = error ? String(error) : undefined;
+
   return (
     <DashboardLayout>
       <PageHeader 
@@ -84,12 +86,12 @@ const Configuration = () => {
         </div>
       </PageHeader>
 
-      {error && (
+      {errorMessage && (
         <Alert variant="destructive" className="mb-6">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
-            Failed to load configuration: {error}
+            Failed to load configuration: {errorMessage}
           </AlertDescription>
         </Alert>
       )}

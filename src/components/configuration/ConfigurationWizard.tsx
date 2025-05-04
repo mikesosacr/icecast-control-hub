@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useConfigMutation } from "@/hooks/useIcecastApi";
-import { parseXmlToConfig, configToXml } from "@/lib/xml-config";
+import { parseXmlToConfig, configToXml, IcecastConfig } from "@/lib/xml-config";
 import { toast } from "sonner";
 
 const configSchema = z.object({
@@ -62,7 +62,34 @@ const ConfigurationWizard = ({ currentConfig, onSave }: ConfigurationWizardProps
 
   const handleSubmit = (data: ConfigFormValues) => {
     try {
-      const xmlConfig = configToXml(data);
+      // Ensure data matches the IcecastConfig interface
+      const config: IcecastConfig = {
+        server: {
+          location: data.server.location,
+          admin: data.server.admin,
+        },
+        limits: {
+          clients: data.limits.clients,
+          sources: data.limits.sources,
+          queueSize: data.limits.queueSize,
+          clientTimeout: data.limits.clientTimeout,
+          headerTimeout: data.limits.headerTimeout,
+          sourceTimeout: data.limits.sourceTimeout,
+        },
+        authentication: {
+          sourcePassword: data.authentication.sourcePassword,
+          relayPassword: data.authentication.relayPassword,
+          adminUser: data.authentication.adminUser,
+          adminPassword: data.authentication.adminPassword,
+        },
+        listen: {
+          port: data.listen.port,
+          bindAddress: data.listen.bindAddress,
+        },
+        mountPoints: data.mountPoints,
+      };
+      
+      const xmlConfig = configToXml(config);
       updateConfig({ config: xmlConfig });
       toast.success("Configuration saved");
       onSave();

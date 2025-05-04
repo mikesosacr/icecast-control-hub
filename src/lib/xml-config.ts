@@ -170,13 +170,5 @@ export function configToXml(config: IcecastConfig): string {
   }
 }
 
-// In a real implementation, this would use an actual XML parser/generator
-export const xmlToJson = (xml: string): Record<string, any> => {
-  // This is a simplified placeholder - a real app would use a proper XML parser
-  return {};
-};
-
-export const jsonToXml = (json: Record<string, any>): string => {
-  // This is a simplified placeholder - a real app would use a proper XML generator
-  return "";
-};
+// Use the imported utility functions for more advanced XML operations
+export { xmlToJson, jsonToXml };
