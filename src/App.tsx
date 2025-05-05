@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import Dashboard from '@/pages/Dashboard';
 import Mountpoints from '@/pages/Mountpoints';
+import NewMountpoint from '@/pages/NewMountpoint';
 import Users from '@/pages/Users';
 import Statistics from '@/pages/Statistics';
 import Logs from '@/pages/Logs';
@@ -30,6 +31,7 @@ function App() {
                 <Route path="/" element={<DashboardLayout />}>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/mountpoints" element={<Mountpoints />} />
+                  <Route path="/mountpoints/new" element={<NewMountpoint />} />
                   <Route path="/users" element={<Users />} />
                   <Route path="/statistics" element={<Statistics />} />
                   <Route path="/logs" element={<Logs />} />

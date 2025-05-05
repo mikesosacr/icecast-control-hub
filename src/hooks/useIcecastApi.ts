@@ -141,7 +141,16 @@ export function useMountpointMutations() {
   });
   
   return {
-    createMountpoint: createMutation.mutate,
+    createMountpoint: (params: { serverId?: string, mountpoint: Omit<MountPoint, 'id'> }, options?: { onSuccess?: () => void, onError?: (error: unknown) => void }) => {
+      createMutation.mutate(params, {
+        onSuccess: () => {
+          options?.onSuccess?.();
+        },
+        onError: (error) => {
+          options?.onError?.(error);
+        }
+      });
+    },
     updateMountpoint: updateMutation.mutate,
     deleteMountpoint: deleteMutation.mutate,
     toggleMountpointVisibility: toggleVisibilityMutation.mutate,
