@@ -66,8 +66,10 @@ const NewMountpoint = () => {
         sampleRate: data.sampleRate,
         status: data.status,
         isPublic: data.isPublic,
-        listeners: 0,
-        peakListeners: 0,
+        listeners: {
+          current: 0,
+          peak: 0
+        },
         streamStart: new Date().toISOString(),
       }
     }, {
