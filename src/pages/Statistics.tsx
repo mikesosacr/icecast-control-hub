@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -59,7 +58,7 @@ const Statistics = () => {
 
   if (hasError) {
     return (
-      <DashboardLayout>
+      <>
         <PageHeader 
           heading="Statistics" 
           text="Track your server usage and listener activity"
@@ -70,12 +69,12 @@ const Statistics = () => {
             {String(statsError || mountpointsError || listenersError || "Failed to load data. Please check your connection.")}
           </AlertDescription>
         </Alert>
-      </DashboardLayout>
+      </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader 
         heading="Statistics" 
         text="Track your server usage and listener activity"
@@ -228,7 +227,7 @@ const Statistics = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </DashboardLayout>
+    </>
   );
 };
 

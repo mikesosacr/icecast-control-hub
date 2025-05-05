@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertCircle, Loader2 } from "lucide-react";
@@ -49,17 +48,15 @@ const Configuration = () => {
 
   if (isLoading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2 text-lg">Loading configuration...</span>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg">Loading configuration...</span>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader 
         heading="Configuration" 
         text="Manage your Icecast server configuration"
@@ -103,7 +100,7 @@ const Configuration = () => {
         onOpenChange={setInstallModalOpen}
         onInstallComplete={handleInstallComplete}
       />
-    </DashboardLayout>
+    </>
   );
 };
 

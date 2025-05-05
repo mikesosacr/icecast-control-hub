@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -68,7 +67,7 @@ const RemoteServers = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader 
         heading="Server Management" 
         text="Manage your Icecast server instances"
@@ -208,7 +207,7 @@ const RemoteServers = () => {
           </TabsContent>
         </Tabs>
       )}
-    </DashboardLayout>
+    </>
   );
 };
 

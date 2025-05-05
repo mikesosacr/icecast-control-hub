@@ -1,7 +1,5 @@
 
 import { useState } from "react";
-import { MountPoint } from "@/types/icecast";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +44,7 @@ const Mountpoints = () => {
 
   if (error) {
     return (
-      <DashboardLayout>
+      <>
         <PageHeader 
           heading="Mountpoints" 
           text="Create and manage streaming mountpoints"
@@ -57,12 +55,12 @@ const Mountpoints = () => {
             {String(error)}
           </AlertDescription>
         </Alert>
-      </DashboardLayout>
+      </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader 
         heading="Mountpoints" 
         text="Create and manage streaming mountpoints"
@@ -140,7 +138,7 @@ const Mountpoints = () => {
           </Button>
         </div>
       )}
-    </DashboardLayout>
+    </>
   );
 };
 

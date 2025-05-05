@@ -1,5 +1,4 @@
 
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LogEntry } from "@/types/icecast";
@@ -74,7 +73,7 @@ const Logs = () => {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader 
         heading="System Logs" 
         text="View and analyze server logs"
@@ -169,7 +168,7 @@ const Logs = () => {
           </div>
         </CardContent>
       </Card>
-    </DashboardLayout>
+    </>
   );
 };
 

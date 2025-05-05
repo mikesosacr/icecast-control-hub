@@ -1,9 +1,7 @@
 
 import { useState } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
-import { User } from "@/types/icecast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash, Plus, Users as UsersIcon } from "lucide-react";
@@ -33,7 +31,7 @@ const Users = () => {
   );
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader 
         heading="User Management" 
         text="Manage admin and streamer accounts"
@@ -125,7 +123,7 @@ const Users = () => {
           )}
         </CardContent>
       </Card>
-    </DashboardLayout>
+    </>
   );
 };
 

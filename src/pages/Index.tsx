@@ -2,12 +2,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BarChart2, Layers, Radio, Shield, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 
 const Index = () => {
   return (
-    <DashboardLayout>
-      <div className="py-10">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+      <div className="py-10 container mx-auto">
         <div className="mb-12 text-center">
           <h1 className="text-4xl font-bold mb-3 text-gradient">Bienvenido a Icecast Admin</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -53,7 +52,7 @@ const Index = () => {
           </Link>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

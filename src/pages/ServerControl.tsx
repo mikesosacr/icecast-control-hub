@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -61,7 +60,7 @@ const ServerControl = () => {
 
   if (error) {
     return (
-      <DashboardLayout>
+      <>
         <PageHeader 
           heading="Server Control" 
           text="Manage and control your Icecast server instance"
@@ -70,12 +69,12 @@ const ServerControl = () => {
           <AlertTitle>Error loading server data</AlertTitle>
           <AlertDescription>{String(error)}</AlertDescription>
         </Alert>
-      </DashboardLayout>
+      </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <PageHeader 
         heading="Server Control" 
         text="Manage and control your Icecast server instance"
@@ -304,7 +303,7 @@ const ServerControl = () => {
           </div>
         </CardContent>
       </Card>
-    </DashboardLayout>
+    </>
   );
 };
 
