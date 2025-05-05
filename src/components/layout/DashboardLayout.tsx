@@ -60,6 +60,17 @@ const DashboardLayout = () => {
                 </MenubarItem>
               </MenubarContent>
             </MenubarMenu>
+            <MenubarMenu>
+              <MenubarTrigger>Ayuda</MenubarTrigger>
+              <MenubarContent>
+                <MenubarItem asChild>
+                  <Link to="/">Inicio</Link>
+                </MenubarItem>
+                <MenubarItem onClick={() => window.open('https://github.com/YOUR-USERNAME/YOUR-REPO', '_blank')}>
+                  GitHub
+                </MenubarItem>
+              </MenubarContent>
+            </MenubarMenu>
           </Menubar>
         </div>
       </div>
