@@ -24,7 +24,7 @@ export function useMountpoint(serverId = 'local', mountpointId: string) {
 
 // Mountpoint mutations (create, update, delete, toggle visibility)
 export function useMountpointMutations() {
-  const queryClient = queryClient;
+  // queryClient is now imported from useApiBase
   
   const createMutation = useMutation({
     mutationFn: ({ serverId = 'local', mountpoint }: { serverId?: string, mountpoint: Omit<MountPoint, 'id'> }) => 

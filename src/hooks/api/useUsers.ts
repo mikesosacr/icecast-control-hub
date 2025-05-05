@@ -23,7 +23,7 @@ export function useUser(serverId = 'local', userId: string) {
 
 // User mutations (create, update, delete)
 export function useUserMutations() {
-  const queryClient = queryClient;
+  // queryClient is now imported from useApiBase
   
   const createMutation = useMutation({
     mutationFn: ({ serverId = 'local', user }: { serverId?: string, user: Omit<User, 'id'> }) => 

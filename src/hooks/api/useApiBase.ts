@@ -2,6 +2,7 @@
 import { toast } from 'sonner';
 import { QueryClient } from '@tanstack/react-query';
 import { ApiResponse } from '@/types/icecast';
+import { queryClient } from '@/lib/react-query';
 
 // Shared utility for handling API error responses in mutations
 export const handleApiError = (error: unknown): string => {
@@ -36,4 +37,4 @@ export const createMutationHandlers = <T>(
 };
 
 // Export the shared queryClient
-export { queryClient } from '@/lib/react-query';
+export { queryClient };

@@ -14,7 +14,7 @@ export function useServers() {
 
 // Server mutations (add, update, delete)
 export function useServerMutations() {
-  const queryClient = queryClient;
+  // queryClient is now imported from useApiBase
   
   const addMutation = useMutation({
     mutationFn: (server: Omit<IcecastServer, 'id' | 'status'>) => api.addServer(server),

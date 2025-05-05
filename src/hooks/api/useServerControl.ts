@@ -24,7 +24,7 @@ export function useServerStats(serverId = 'local') {
 
 // Server control
 export function useServerControl() {
-  const queryClient = queryClient;
+  // queryClient is now imported from useApiBase
   
   const startMutation = useMutation({
     mutationFn: (serverId: string = 'local') => api.startServer(serverId),
