@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BarChart2, Layers, Radio, Shield, Settings } from "lucide-react";
+import { ArrowRight, BarChart2, Layers, Radio, Shield, Settings, Music } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -15,7 +15,7 @@ const Index = () => {
         </div>
 
         {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           <FeatureCard 
             icon={<BarChart2 className="h-8 w-8" />}
             title="Estadísticas en tiempo real"
@@ -39,6 +39,18 @@ const Index = () => {
             title="Configuración avanzada"
             description="Personaliza cada aspecto de tu servidor Icecast2 a través de una interfaz amigable."
             linkTo="/configuration"
+          />
+          <FeatureCard 
+            icon={<Music className="h-8 w-8" />}
+            title="Generador de reproductores IA"
+            description="Crea reproductores de audio personalizados para tus radios con diseños llamativos generados por IA."
+            linkTo="/ai-radio-player"
+          />
+          <FeatureCard 
+            icon={<Layers className="h-8 w-8" />}
+            title="Gestión multi-servidor"
+            description="Administra múltiples servidores Icecast2 desde una única interfaz centralizada."
+            linkTo="/remote-servers"
           />
         </div>
 

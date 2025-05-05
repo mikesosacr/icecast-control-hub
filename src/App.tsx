@@ -12,6 +12,7 @@ import Logs from '@/pages/Logs';
 import Configuration from '@/pages/Configuration';
 import ServerControl from '@/pages/ServerControl';
 import RemoteServers from '@/pages/RemoteServers';
+import AIRadioPlayerGenerator from '@/pages/AIRadioPlayerGenerator';
 import Index from '@/pages/Index';
 import NotFound from '@/pages/NotFound';
 import { queryClient } from '@/lib/react-query';
@@ -34,6 +35,7 @@ function App() {
                 <Route path="/configuration" element={<Configuration />} />
                 <Route path="/server-control" element={<ServerControl />} />
                 <Route path="/remote-servers" element={<RemoteServers />} />
+                <Route path="/ai-radio-player" element={<AIRadioPlayerGenerator />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -53,8 +53,11 @@ const DashboardLayout = () => {
               </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
-              <MenubarTrigger>Usuarios</MenubarTrigger>
+              <MenubarTrigger>Herramientas</MenubarTrigger>
               <MenubarContent>
+                <MenubarItem asChild>
+                  <Link to="/ai-radio-player">Generador de Reproductores IA</Link>
+                </MenubarItem>
                 <MenubarItem asChild>
                   <Link to="/users">Gestionar usuarios</Link>
                 </MenubarItem>
