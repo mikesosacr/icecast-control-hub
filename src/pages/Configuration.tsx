@@ -1,14 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertCircle, Loader2 } from "lucide-react";
 import { useConfig, useConfigMutation, useServerControl } from "@/hooks/useIcecastApi";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InstallIcecastModal } from "@/components/configuration/InstallIcecastModal";
 import { toast } from "sonner";
+import { InstallIcecastModal } from "@/components/configuration/InstallIcecastModal";
 import { ServerStatusSection } from "@/components/configuration/ServerStatusSection";
 import { ConfigurationTabs } from "@/components/configuration/ConfigurationTabs";
+import { ConfigurationPageHeader } from "@/components/configuration/PageHeader";
+import { ConfigurationLoadingState } from "@/components/configuration/LoadingState";
+import { ErrorAlert } from "@/components/configuration/ErrorAlert";
 
 const Configuration = () => {
   const { data: configData, isLoading, error, refetch } = useConfig('local');
@@ -47,46 +46,22 @@ const Configuration = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-lg">Loading configuration...</span>
-      </div>
-    );
+    return <ConfigurationLoadingState />;
   }
 
   return (
     <>
-      <PageHeader 
-        heading="Configuration" 
-        text="Manage your Icecast server configuration"
-      >
-        <div className="flex gap-2">
-          <Button onClick={handleRefresh} variant="outline" disabled={isLoading}>
-            <RefreshCw className={`mr-1 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          
-          {configData?.success && (
-            <Button onClick={handleRestart} variant="outline" disabled={isRestarting}>
-              <RefreshCw className={`mr-1 h-4 w-4 ${isRestarting ? 'animate-spin' : ''}`} />
-              {isRestarting ? "Restarting..." : "Restart Server"}
-            </Button>
-          )}
-        </div>
-      </PageHeader>
+      <ConfigurationPageHeader 
+        isLoading={isLoading}
+        isRestarting={isRestarting}
+        onRefresh={handleRefresh}
+        onRestart={handleRestart}
+        showRestartButton={configData?.success}
+      />
 
       <ServerStatusSection onInstallClick={() => setInstallModalOpen(true)} />
 
-      {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>
-            Failed to load configuration: {String(error)}
-          </AlertDescription>
-        </Alert>
-      )}
+      {error && <ErrorAlert error={error} />}
 
       <ConfigurationTabs
         xmlConfig={xmlConfig}

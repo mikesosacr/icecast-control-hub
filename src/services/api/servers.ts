@@ -1,6 +1,6 @@
 
 import { fetchApi } from './apiUtils';
-import { IcecastServer } from '@/types/icecast';
+import { IcecastServer, ApiResponse } from '@/types/icecast';
 
 // Export IcecastServer type to fix type error in useIcecastApi
 export type { IcecastServer };

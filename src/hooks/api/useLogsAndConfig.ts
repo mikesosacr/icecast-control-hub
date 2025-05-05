@@ -2,6 +2,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import * as api from '@/services/api';
 import { createMutationHandlers, queryClient } from './useApiBase';
+import { ApiResponse } from '@/types/icecast';
 
 // Logs
 export function useLogs(serverId = 'local', filters?: {

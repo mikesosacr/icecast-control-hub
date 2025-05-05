@@ -1,6 +1,6 @@
 
 import { fetchApi } from './apiUtils';
-import { User } from '@/types/icecast';
+import { User, ApiResponse } from '@/types/icecast';
 
 export async function getUsers(serverId: string = 'local'): Promise<ApiResponse<User[]>> {
   return fetchApi<User[]>(`/servers/${serverId}/users`);

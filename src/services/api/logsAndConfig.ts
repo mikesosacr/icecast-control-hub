@@ -1,27 +1,25 @@
 
 import { fetchApi } from './apiUtils';
-import { LogEntry } from '@/types/icecast';
+import { LogEntry, ApiResponse } from '@/types/icecast';
 
-// Logs
-export async function getLogs(serverId: string = 'local', filters?: {
-  level?: 'info' | 'warning' | 'error',
-  source?: string,
-  query?: string
-}): Promise<ApiResponse<LogEntry[]>> {
-  const queryParams = new URLSearchParams();
-  
-  if (filters) {
-    if (filters.level) queryParams.append('level', filters.level);
-    if (filters.source) queryParams.append('source', filters.source);
-    if (filters.query) queryParams.append('query', filters.query);
-  }
+interface LogFilters {
+  level?: 'info' | 'warning' | 'error';
+  source?: string;
+  query?: string;
+}
 
-  const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+export async function getLogs(serverId: string = 'local', filters?: LogFilters): Promise<ApiResponse<LogEntry[]>> {
+  // Build query parameters
+  const params = new URLSearchParams();
+  if (filters?.level) params.append('level', filters.level);
+  if (filters?.source) params.append('source', filters.source);
+  if (filters?.query) params.append('query', filters.query);
+
+  const queryString = params.toString() ? `?${params.toString()}` : '';
   
   return fetchApi<LogEntry[]>(`/servers/${serverId}/logs${queryString}`);
 }
 
-// Server configuration
 export async function getConfig(serverId: string = 'local'): Promise<ApiResponse<string>> {
   return fetchApi<string>(`/servers/${serverId}/config`);
 }

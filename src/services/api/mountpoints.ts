@@ -1,6 +1,6 @@
 
 import { fetchApi } from './apiUtils';
-import { MountPoint, Listener } from '@/types/icecast';
+import { MountPoint, ApiResponse } from '@/types/icecast';
 
 export async function getMountpoints(serverId: string = 'local'): Promise<ApiResponse<MountPoint[]>> {
   return fetchApi<MountPoint[]>(`/servers/${serverId}/mountpoints`);
@@ -30,18 +30,12 @@ export async function deleteMountpoint(serverId: string = 'local', mountpointId:
   });
 }
 
-export async function toggleMountpointVisibility(serverId: string = 'local', mountpointId: string, isPublic: boolean): Promise<ApiResponse<MountPoint>> {
-  return fetchApi<MountPoint>(`/servers/${serverId}/mountpoints/${mountpointId}/visibility`, {
-    method: 'PUT',
-    body: JSON.stringify({ isPublic }),
-  });
+export async function getListeners(serverId: string = 'local', mountpointId: string): Promise<ApiResponse<{ current: number; peak: number }>> {
+  return fetchApi<{ current: number; peak: number }>(`/servers/${serverId}/mountpoints/${mountpointId}/listeners`);
 }
 
-// Listeners
-export async function getListeners(serverId: string = 'local', mountpointId?: string): Promise<ApiResponse<Listener[]>> {
-  const endpoint = mountpointId 
-    ? `/servers/${serverId}/mountpoints/${mountpointId}/listeners` 
-    : `/servers/${serverId}/listeners`;
-  
-  return fetchApi<Listener[]>(endpoint);
+export async function disconnectListener(serverId: string = 'local', mountpointId: string, listenerId: string): Promise<ApiResponse<void>> {
+  return fetchApi<void>(`/servers/${serverId}/mountpoints/${mountpointId}/listeners/${listenerId}`, {
+    method: 'DELETE',
+  });
 }
