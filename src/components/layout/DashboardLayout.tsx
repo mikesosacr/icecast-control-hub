@@ -69,7 +69,7 @@ const DashboardLayout = () => {
                 <MenubarItem asChild>
                   <Link to="/">Inicio</Link>
                 </MenubarItem>
-                <MenubarItem onClick={() => window.open('https://github.com/YOUR-USERNAME/YOUR-REPO', '_blank')}>
+                <MenubarItem onClick={() => window.open('https://github.com/icecast-admin/icecast-admin-panel', '_blank')}>
                   GitHub
                 </MenubarItem>
               </MenubarContent>
