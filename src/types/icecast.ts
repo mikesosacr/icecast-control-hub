@@ -1,4 +1,3 @@
-
 export interface IcecastServer {
   id: string;
   name: string;
@@ -16,6 +15,7 @@ export interface MountPoint {
   point: string; // the actual mountpoint path like /stream
   type: 'audio/mpeg' | 'audio/aac' | 'audio/ogg' | string;
   bitrate: number;
+  sampleRate?: number; // Adding sampleRate as an optional property
   description: string;
   genre: string;
   streamUrl: string;
@@ -27,6 +27,7 @@ export interface MountPoint {
   streamPassword: string; // source password
   isPublic: boolean;
   status: 'active' | 'inactive';
+  streamStart?: string; // Adding this as it's used in the NewMountpoint form
 }
 
 export interface User {
