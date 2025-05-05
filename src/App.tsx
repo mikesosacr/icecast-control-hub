@@ -1,7 +1,6 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from '@/components/ui/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import Dashboard from '@/pages/Dashboard';
@@ -21,7 +20,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="icecast-ui-theme">
+      <ThemeProvider defaultTheme="system" storageKey="icecast-ui-theme">
         <TooltipProvider>
           <Router>
             <Routes>
@@ -39,7 +38,6 @@ function App() {
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <Toaster position="top-right" richColors closeButton />
           </Router>
         </TooltipProvider>
       </ThemeProvider>
