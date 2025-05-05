@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
-import { useMountpointMutations } from "@/hooks/useIcecastApi";
+import { useMountpointMutations } from "@/hooks/api/useMountpoints";
 import { MountpointFormHeader } from "@/components/mountpoints/MountpointFormHeader";
 import { BasicInfoFields } from "@/components/mountpoints/BasicInfoFields";
 import { TechnicalFields } from "@/components/mountpoints/TechnicalFields";

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { MountpointCard } from "@/components/mountpoints/MountpointCard";
 import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useMountpoints, useMountpointMutations } from "@/hooks/useIcecastApi";
+import { useMountpoints, useMountpointMutations } from "@/hooks/api/useMountpoints";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
