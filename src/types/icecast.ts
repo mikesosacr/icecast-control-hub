@@ -1,3 +1,4 @@
+
 export interface IcecastServer {
   id: string;
   name: string;
@@ -71,7 +72,9 @@ export interface ServerStats {
   version?: string; // added version field which is optional
 }
 
-export type ServerStatus = 'running' | 'stopped';
+export interface ServerStatus {
+  status: 'running' | 'stopped';
+}
 
 export interface ApiResponse<T> {
   success: boolean;

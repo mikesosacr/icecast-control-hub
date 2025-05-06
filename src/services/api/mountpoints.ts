@@ -30,6 +30,10 @@ export async function deleteMountpoint(serverId: string = 'local', mountpointId:
   });
 }
 
+export async function toggleMountpointVisibility(serverId: string = 'local', mountpointId: string, isPublic: boolean): Promise<ApiResponse<MountPoint>> {
+  return updateMountpoint(serverId, mountpointId, { isPublic });
+}
+
 export async function getListeners(serverId: string = 'local', mountpointId: string): Promise<ApiResponse<{ current: number; peak: number }>> {
   return fetchApi<{ current: number; peak: number }>(`/servers/${serverId}/mountpoints/${mountpointId}/listeners`);
 }

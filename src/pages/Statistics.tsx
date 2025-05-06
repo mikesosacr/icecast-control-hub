@@ -1,5 +1,5 @@
+
 import { useState } from "react";
-import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsCard } from "@/components/statistics/StatsCard";
@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useServerStats, useListeners, useMountpoints } from "@/hooks/useIcecastApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ErrorAlert } from "@/components/configuration/ErrorAlert";
+import { ConfigurationLoadingState } from "@/components/configuration/LoadingState";
+import { Listener } from "@/types/icecast";
 
 // Helper function for formatting duration
 const formatDuration = (seconds: number): string => {
@@ -45,11 +48,11 @@ const Statistics = () => {
     ? mountpointsData.data?.reduce((sum, mp) => sum + (mp.listeners.current * mp.bitrate), 0) || 0
     : 0;
   
-  // Filter listeners based on selected mountpoint
-  const filteredListeners = listenersData?.success
+  // Fix the filtering of listeners
+  const filteredListeners = listenersData?.success && listenersData.data
     ? selectedMountpoint === "all" 
-      ? listenersData.data || []
-      : (listenersData.data || []).filter(listener => listener.mountpoint === selectedMountpoint)
+      ? listenersData.data 
+      : listenersData.data.filter((listener: Listener) => listener.mountpoint === selectedMountpoint)
     : [];
 
   // Handle loading and error states

@@ -1,6 +1,10 @@
 
 import { fetchApi } from './apiUtils';
-import { ServerStatus, ServerStats, ApiResponse } from '@/types/icecast';
+import { ServerStats, ApiResponse } from '@/types/icecast';
+
+export interface ServerStatus {
+  status: 'running' | 'stopped';
+}
 
 export async function getServerStatus(serverId: string = 'local'): Promise<ApiResponse<ServerStatus>> {
   return fetchApi<ServerStatus>(`/servers/${serverId}/status`);
