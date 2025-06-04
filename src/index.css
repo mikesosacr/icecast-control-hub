@@ -147,3 +147,18 @@
     @apply bg-muted-foreground;
   }
 }
+
+/* Sidebar menu text visibility improvements */
+@layer components {
+  [data-sidebar="menu-button"] span {
+    @apply text-sidebar-foreground opacity-90;
+  }
+  
+  [data-sidebar="menu-button"]:hover span {
+    @apply opacity-100;
+  }
+  
+  [data-sidebar="menu-button"][data-active="true"] span {
+    @apply opacity-100 font-semibold;
+  }
+}
