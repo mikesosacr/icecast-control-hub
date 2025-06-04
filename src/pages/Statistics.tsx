@@ -39,6 +39,11 @@ const Statistics = () => {
   const isLoading = statsLoading || mountpointsLoading || listenersLoading;
   const hasError = statsError || mountpointsError || listenersError;
 
+  // Ensure listeners data is an array of Listener objects
+  const listeners = listenersData?.success && Array.isArray(listenersData.data) 
+    ? listenersData.data 
+    : [];
+
   if (hasError) {
     return (
       <>
@@ -75,7 +80,7 @@ const Statistics = () => {
         
         <TabsContent value="listeners" className="mt-6">
           <ListenersTable 
-            listeners={listenersData?.success ? listenersData.data || [] : []} 
+            listeners={listeners} 
             mountpoints={mountpointsData?.success ? mountpointsData.data : undefined}
             isLoading={isLoading}
           />
