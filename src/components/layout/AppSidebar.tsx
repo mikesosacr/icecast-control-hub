@@ -78,7 +78,7 @@ export function AppSidebar() {
   ];
 
   return (
-    <Sidebar variant="sidebar" side="left" collapsible="icon">
+    <Sidebar variant="sidebar" side="left" collapsible="none">
       <SidebarHeader className="px-6 py-3 flex items-center gap-2">
         <div className="relative h-8 w-8 mr-1">
           <div className="h-full w-full bg-white rounded-md flex items-center justify-center">
@@ -134,9 +134,8 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     isActive={location.pathname === item.path}
-                    tooltip={item.title}
                   >
-                    <Link to={item.path} className="flex items-center gap-2 w-full">
+                    <Link to={item.path} className="flex items-center gap-3 w-full px-3 py-2">
                       <item.icon className="h-5 w-5 shrink-0" />
                       <span className="text-sm font-medium">{item.title}</span>
                     </Link>
@@ -155,9 +154,8 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     isActive={location.pathname === item.path}
-                    tooltip={item.title}
                   >
-                    <Link to={item.path} className="flex items-center gap-2 w-full">
+                    <Link to={item.path} className="flex items-center gap-3 w-full px-3 py-2">
                       <item.icon className="h-5 w-5 shrink-0" />
                       <span className="text-sm font-medium">{item.title}</span>
                     </Link>
