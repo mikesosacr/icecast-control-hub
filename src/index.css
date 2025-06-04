@@ -148,17 +148,28 @@
   }
 }
 
-/* Sidebar menu text visibility improvements */
+/* Sidebar menu text visibility improvements - Force text to be visible */
 @layer components {
+  /* Force sidebar menu button text to be visible */
   [data-sidebar="menu-button"] span {
-    @apply text-sidebar-foreground opacity-90;
+    color: hsl(var(--sidebar-foreground)) !important;
+    opacity: 0.85 !important;
+    font-weight: 500 !important;
   }
   
+  /* Hover state */
   [data-sidebar="menu-button"]:hover span {
-    @apply opacity-100;
+    opacity: 1 !important;
   }
   
+  /* Active state */
   [data-sidebar="menu-button"][data-active="true"] span {
-    @apply opacity-100 font-semibold;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+  }
+  
+  /* Ensure all sidebar text is visible */
+  [data-sidebar="sidebar"] span {
+    color: hsl(var(--sidebar-foreground)) !important;
   }
 }
