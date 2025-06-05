@@ -136,9 +136,15 @@ export function AppSidebar() {
                     isActive={location.pathname === item.path}
                     className="w-full"
                   >
-                    <Link to={item.path} className="flex items-center gap-3 w-full px-3 py-2">
-                      <item.icon className="h-5 w-5 shrink-0 text-gray-700 hover:text-white" />
-                      <span className="text-sm font-medium text-gray-700 hover:text-white">{item.title}</span>
+                    <Link 
+                      to={item.path} 
+                      className={cn(
+                        "flex items-center gap-3 w-full px-3 py-2 text-gray-800 hover:bg-gray-800 hover:text-white transition-colors rounded-md",
+                        location.pathname === item.path && "bg-gray-800 text-white"
+                      )}
+                    >
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      <span className="text-sm font-medium">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -157,9 +163,15 @@ export function AppSidebar() {
                     isActive={location.pathname === item.path}
                     className="w-full"
                   >
-                    <Link to={item.path} className="flex items-center gap-3 w-full px-3 py-2">
-                      <item.icon className="h-5 w-5 shrink-0 text-gray-700 hover:text-white" />
-                      <span className="text-sm font-medium text-gray-700 hover:text-white">{item.title}</span>
+                    <Link 
+                      to={item.path} 
+                      className={cn(
+                        "flex items-center gap-3 w-full px-3 py-2 text-gray-800 hover:bg-gray-800 hover:text-white transition-colors rounded-md",
+                        location.pathname === item.path && "bg-gray-800 text-white"
+                      )}
+                    >
+                      <item.icon className="h-5 w-5 shrink-0" />
+                      <span className="text-sm font-medium">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
