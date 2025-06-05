@@ -148,42 +148,50 @@
   }
 }
 
-/* Sidebar menu text visibility improvements - Force text to be visible */
+/* Sidebar menu text visibility - DARK by default, WHITE on hover/active */
 @layer components {
-  /* Force sidebar menu button text to be visible always */
+  /* Default state: DARK text on light sidebar */
   [data-sidebar="menu-button"] {
-    color: white !important;
+    color: #374151 !important; /* Dark gray text */
   }
   
   [data-sidebar="menu-button"] span {
-    color: white !important;
+    color: #374151 !important; /* Dark gray text */
     opacity: 1 !important;
     font-weight: 500 !important;
   }
   
-  /* Group labels should also be visible */
+  /* Group labels - dark but lighter */
   [data-sidebar="group-label"] {
-    color: rgba(255, 255, 255, 0.8) !important;
+    color: #6b7280 !important; /* Medium gray */
   }
   
-  /* Icons should be visible too */
+  /* Icons - dark by default */
   [data-sidebar="menu-button"] svg {
-    color: white !important;
+    color: #374151 !important; /* Dark gray */
     opacity: 1 !important;
   }
   
-  /* Hover state - make it brighter */
+  /* HOVER state - change to WHITE */
+  [data-sidebar="menu-button"]:hover {
+    background-color: #1f2937 !important; /* Dark background on hover */
+  }
+  
   [data-sidebar="menu-button"]:hover span,
   [data-sidebar="menu-button"]:hover svg {
+    color: white !important; /* White text on hover */
     opacity: 1 !important;
-    color: rgba(255, 255, 255, 1) !important;
   }
   
-  /* Active state */
+  /* ACTIVE/SELECTED state - WHITE text on dark background */
+  [data-sidebar="menu-button"][data-active="true"] {
+    background-color: #1f2937 !important; /* Dark background when active */
+  }
+  
   [data-sidebar="menu-button"][data-active="true"] span,
   [data-sidebar="menu-button"][data-active="true"] svg {
+    color: white !important; /* White text when active */
     opacity: 1 !important;
     font-weight: 600 !important;
-    color: white !important;
   }
 }
