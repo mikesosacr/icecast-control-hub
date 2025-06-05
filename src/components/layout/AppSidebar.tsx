@@ -77,6 +77,30 @@ export function AppSidebar() {
     },
   ];
 
+  const MenuItem = ({ item, isActive }: { item: any, isActive: boolean }) => (
+    <Link 
+      to={item.path}
+      className={cn(
+        "flex items-center gap-3 w-full px-3 py-2 rounded-md transition-all duration-200 group",
+        "text-gray-700 hover:bg-gray-800 hover:text-white",
+        isActive && "bg-gray-800 text-white font-medium"
+      )}
+    >
+      <item.icon className={cn(
+        "h-5 w-5 shrink-0 transition-colors",
+        "text-gray-600 group-hover:text-white",
+        isActive && "text-white"
+      )} />
+      <span className={cn(
+        "text-sm font-medium transition-colors",
+        "text-gray-700 group-hover:text-white",
+        isActive && "text-white"
+      )}>
+        {item.title}
+      </span>
+    </Link>
+  );
+
   return (
     <Sidebar variant="sidebar" side="left" collapsible="none">
       <SidebarHeader className="px-6 py-3 flex items-center gap-2">
@@ -108,6 +132,7 @@ export function AppSidebar() {
           <span className="text-sidebar-foreground/70 text-xs">Control Hub</span>
         </div>
       </SidebarHeader>
+      
       <SidebarContent>
         <SidebarGroup>
           <div className="px-4 py-2.5">
@@ -126,60 +151,43 @@ export function AppSidebar() {
               </Badge>
             </div>
           </div>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          
+          <SidebarGroupLabel className="text-gray-600 text-xs font-medium px-4 mb-2">
+            Navigation
+          </SidebarGroupLabel>
+          
           <SidebarGroupContent>
-            <SidebarMenu>
+            <div className="space-y-1 px-2">
               {navigationItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={location.pathname === item.path}
-                    className="w-full"
-                  >
-                    <Link 
-                      to={item.path} 
-                      className={cn(
-                        "flex items-center gap-3 w-full px-3 py-2 text-gray-800 hover:bg-gray-800 hover:text-white transition-colors rounded-md",
-                        location.pathname === item.path && "bg-gray-800 text-white"
-                      )}
-                    >
-                      <item.icon className="h-5 w-5 shrink-0" />
-                      <span className="text-sm font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <MenuItem 
+                  key={item.path} 
+                  item={item} 
+                  isActive={location.pathname === item.path} 
+                />
               ))}
-            </SidebarMenu>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
+        
         <SidebarGroup>
-          <SidebarGroupLabel>Server Management</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-gray-600 text-xs font-medium px-4 mb-2">
+            Server Management
+          </SidebarGroupLabel>
+          
           <SidebarGroupContent>
-            <SidebarMenu>
+            <div className="space-y-1 px-2">
               {serverManagementItems.map((item) => (
-                <SidebarMenuItem key={item.path}>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={location.pathname === item.path}
-                    className="w-full"
-                  >
-                    <Link 
-                      to={item.path} 
-                      className={cn(
-                        "flex items-center gap-3 w-full px-3 py-2 text-gray-800 hover:bg-gray-800 hover:text-white transition-colors rounded-md",
-                        location.pathname === item.path && "bg-gray-800 text-white"
-                      )}
-                    >
-                      <item.icon className="h-5 w-5 shrink-0" />
-                      <span className="text-sm font-medium">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <MenuItem 
+                  key={item.path} 
+                  item={item} 
+                  isActive={location.pathname === item.path} 
+                />
               ))}
-            </SidebarMenu>
+            </div>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
       <SidebarFooter className="px-6 py-3">
         <div className="flex items-center justify-between text-sidebar-foreground/60 text-xs">
           <span>IcecastAdmin v1.0.0</span>
