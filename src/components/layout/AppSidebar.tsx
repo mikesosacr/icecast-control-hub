@@ -137,8 +137,8 @@ export function AppSidebar() {
                     className="w-full"
                   >
                     <Link to={item.path} className="flex items-center gap-3 w-full px-3 py-2">
-                      <item.icon className="h-5 w-5 shrink-0" />
-                      <span className="text-sm font-medium text-white dark:text-white opacity-90 hover:opacity-100">{item.title}</span>
+                      <item.icon className="h-5 w-5 shrink-0 text-gray-700 group-hover:text-white" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-white">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -158,8 +158,8 @@ export function AppSidebar() {
                     className="w-full"
                   >
                     <Link to={item.path} className="flex items-center gap-3 w-full px-3 py-2">
-                      <item.icon className="h-5 w-5 shrink-0" />
-                      <span className="text-sm font-medium text-white dark:text-white opacity-90 hover:opacity-100">{item.title}</span>
+                      <item.icon className="h-5 w-5 shrink-0 text-gray-700 group-hover:text-white" />
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-white">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
