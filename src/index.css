@@ -150,7 +150,7 @@
 
 /* Sidebar menu text visibility - DARK by default, WHITE on hover/active */
 @layer components {
-  /* Default state: DARK text on light sidebar */
+  /* Default state: DARK text on light sidebar - Force visibility */
   [data-sidebar="menu-button"] {
     color: #374151 !important; /* Dark gray text */
   }
@@ -159,6 +159,8 @@
     color: #374151 !important; /* Dark gray text */
     opacity: 1 !important;
     font-weight: 500 !important;
+    display: block !important; /* Force display */
+    visibility: visible !important; /* Force visibility */
   }
   
   /* Group labels - dark but lighter */
@@ -193,5 +195,23 @@
     color: white !important; /* White text when active */
     opacity: 1 !important;
     font-weight: 600 !important;
+  }
+
+  /* Additional override for any text inside sidebar menu buttons */
+  .sidebar-menu span,
+  [data-sidebar="menu"] span {
+    color: #374151 !important;
+    opacity: 1 !important;
+    display: inline !important;
+    visibility: visible !important;
+  }
+
+  /* Force all text inside sidebar links to be visible */
+  [data-sidebar="menu-button"] a span {
+    color: #374151 !important;
+    opacity: 1 !important;
+    font-weight: 500 !important;
+    display: inline !important;
+    visibility: visible !important;
   }
 }
