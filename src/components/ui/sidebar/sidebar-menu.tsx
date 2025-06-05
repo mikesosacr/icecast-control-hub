@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { VariantProps, cva } from "class-variance-authority";
@@ -84,7 +83,13 @@ export const SidebarMenuButton = React.forwardRef<
         data-sidebar="menu-button"
         data-size={size}
         data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+        className={cn(
+          sidebarMenuButtonVariants({ variant, size }), 
+          // Force text visibility
+          "[&_span]:!text-white [&_span]:!opacity-90 hover:[&_span]:!opacity-100",
+          "dark:[&_span]:!text-white",
+          className
+        )}
         {...props}
       />
     );
