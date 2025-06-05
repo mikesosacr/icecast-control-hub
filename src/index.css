@@ -26,13 +26,13 @@
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
 
-    /* Sidebar */
+    /* Sidebar - Force white text on dark background */
     --sidebar: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
+    --sidebar-foreground: 0 0% 100%;
     --sidebar-muted: 217.2 32.6% 17.5%;
-    --sidebar-muted-foreground: 215 20.2% 65.1%;
+    --sidebar-muted-foreground: 0 0% 90%;
     --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 224.3 76.3% 48%;
   }
@@ -58,13 +58,13 @@
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
 
-    /* Sidebar */
+    /* Sidebar - Force white text on dark background for dark mode too */
     --sidebar: 223 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
+    --sidebar-foreground: 0 0% 100%;
     --sidebar-muted: 223 47% 16%;
-    --sidebar-muted-foreground: 215 20.2% 65.1%;
+    --sidebar-muted-foreground: 0 0% 90%;
     --sidebar-accent: 223 47% 16%;
-    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 223 47% 16%;
     --sidebar-ring: 224.3 76.3% 48%;
   }
@@ -150,26 +150,40 @@
 
 /* Sidebar menu text visibility improvements - Force text to be visible */
 @layer components {
-  /* Force sidebar menu button text to be visible */
+  /* Force sidebar menu button text to be visible always */
+  [data-sidebar="menu-button"] {
+    color: white !important;
+  }
+  
   [data-sidebar="menu-button"] span {
-    color: hsl(var(--sidebar-foreground)) !important;
-    opacity: 0.85 !important;
+    color: white !important;
+    opacity: 1 !important;
     font-weight: 500 !important;
   }
   
-  /* Hover state */
-  [data-sidebar="menu-button"]:hover span {
+  /* Group labels should also be visible */
+  [data-sidebar="group-label"] {
+    color: rgba(255, 255, 255, 0.8) !important;
+  }
+  
+  /* Icons should be visible too */
+  [data-sidebar="menu-button"] svg {
+    color: white !important;
     opacity: 1 !important;
+  }
+  
+  /* Hover state - make it brighter */
+  [data-sidebar="menu-button"]:hover span,
+  [data-sidebar="menu-button"]:hover svg {
+    opacity: 1 !important;
+    color: rgba(255, 255, 255, 1) !important;
   }
   
   /* Active state */
-  [data-sidebar="menu-button"][data-active="true"] span {
+  [data-sidebar="menu-button"][data-active="true"] span,
+  [data-sidebar="menu-button"][data-active="true"] svg {
     opacity: 1 !important;
     font-weight: 600 !important;
-  }
-  
-  /* Ensure all sidebar text is visible */
-  [data-sidebar="sidebar"] span {
-    color: hsl(var(--sidebar-foreground)) !important;
+    color: white !important;
   }
 }
