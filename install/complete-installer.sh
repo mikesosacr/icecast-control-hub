@@ -1,4 +1,3 @@
-
 #!/bin/bash
 set -e
 
@@ -10,7 +9,7 @@ YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}================================================================${NC}"
-echo -e "${BLUE}    Icecast2 Admin Panel - Instalador Inteligente Ubuntu       ${NC}"
+echo -e "${BLUE}    Icecast2 Admin Panel - Instalador Completo Ubuntu          ${NC}"
 echo -e "${BLUE}================================================================${NC}"
 
 # Check if running as root
@@ -39,16 +38,18 @@ echo -e "${GREEN}IP del servidor detectada: ${SERVER_IP}${NC}"
 # Application directory
 APP_DIR="/opt/icecast-admin"
 
+# Default credentials
+ICECAST_PORT=8000
+ICECAST_ADMIN_USER="admin"
+ICECAST_ADMIN_PASS=""
+ICECAST_SOURCE_PASS=""
+
 # Function to detect existing Icecast installation
 detect_icecast() {
     echo -e "${BLUE}Detectando instalación existente de Icecast2...${NC}"
     
     ICECAST_INSTALLED=false
     ICECAST_CONFIG_PATH=""
-    ICECAST_PORT=8000
-    ICECAST_ADMIN_USER=""
-    ICECAST_ADMIN_PASS=""
-    ICECAST_SOURCE_PASS=""
     
     # Check if icecast2 command exists
     if command -v icecast2 &> /dev/null; then
@@ -96,31 +97,7 @@ detect_icecast() {
     fi
 }
 
-# Function to install system dependencies
-install_dependencies() {
-    echo -e "${BLUE}Instalando dependencias del sistema...${NC}"
-    
-    apt-get update
-    apt-get install -y curl wget gnupg2 ca-certificates lsb-release apt-transport-https nginx supervisor git
-    
-    # Install Node.js
-    echo -e "${GREEN}Instalando Node.js...${NC}"
-    if ! command -v node &> /dev/null; then
-        curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-        apt-get install -y nodejs
-    else
-        echo -e "${GREEN}✓ Node.js ya está instalado$(NC)"
-    fi
-    
-    # Install Icecast2 if not present
-    if [ "$ICECAST_INSTALLED" = false ]; then
-        echo -e "${GREEN}Instalando Icecast2...${NC}"
-        apt-get install -y icecast2
-        ICECAST_CONFIG_PATH="/etc/icecast2/icecast.xml"
-    fi
-}
-
-# Function to configure admin credentials
+# Function to configure credentials
 configure_credentials() {
     echo -e "${BLUE}Configurando credenciales de administración...${NC}"
     
@@ -136,7 +113,7 @@ configure_credentials() {
             configure_new_credentials
         fi
     else
-        echo -e "${YELLOW}No se encontraron credenciales existentes o están incompletas${NC}"
+        echo -e "${YELLOW}No se encontraron credenciales existentes${NC}"
         configure_new_credentials
     fi
 }
@@ -167,6 +144,30 @@ configure_new_credentials() {
         read -s new_source_pass
         echo
         ICECAST_SOURCE_PASS=${new_source_pass:-"hackme"}
+    fi
+}
+
+# Function to install dependencies
+install_dependencies() {
+    echo -e "${BLUE}Instalando dependencias del sistema...${NC}"
+    
+    apt-get update
+    apt-get install -y curl wget gnupg2 ca-certificates lsb-release apt-transport-https nginx supervisor git
+    
+    # Install Node.js
+    echo -e "${GREEN}Instalando Node.js...${NC}"
+    if ! command -v node &> /dev/null; then
+        curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+        apt-get install -y nodejs
+    else
+        echo -e "${GREEN}✓ Node.js ya está instalado${NC}"
+    fi
+    
+    # Install Icecast2 if not present
+    if [ "$ICECAST_INSTALLED" = false ]; then
+        echo -e "${GREEN}Instalando Icecast2...${NC}"
+        apt-get install -y icecast2
+        ICECAST_CONFIG_PATH="/etc/icecast2/icecast.xml"
     fi
 }
 
@@ -547,7 +548,7 @@ EOF
     cd $APP_DIR && npm install
 }
 
-# Function to configure Icecast if needed
+# Function to configure Icecast
 configure_icecast() {
     echo -e "${BLUE}Configurando Icecast2...${NC}"
     
@@ -556,7 +557,7 @@ configure_icecast() {
         cp "$ICECAST_CONFIG_PATH" "${ICECAST_CONFIG_PATH}.bak.$(date +%Y%m%d%H%M%S)"
     fi
     
-    # Create/update config
+    # Use the template configuration
     cat > "$ICECAST_CONFIG_PATH" << EOF
 <icecast>
     <location>Earth</location>
@@ -774,11 +775,11 @@ EOF
 
 # Main installation flow
 main() {
-    echo -e "${GREEN}Iniciando instalación inteligente...${NC}"
+    echo -e "${GREEN}Iniciando instalación completa...${NC}"
     
     detect_icecast
-    install_dependencies
     configure_credentials
+    install_dependencies
     setup_application
     configure_icecast
     setup_services
