@@ -1,11 +1,8 @@
 
 import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Palette } from "lucide-react";
 import { toast } from "sonner";
 
 import { formSchema, FormData, GeneratedPlayer } from "@/components/radio-player-generator/types";
@@ -45,8 +42,18 @@ const AIRadioPlayerGenerator = () => {
       const newPlayer: GeneratedPlayer = {
         id: Date.now(),
         type: 'enhanced',
-        ...data,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        radioName: data.radioName,
+        description: data.description,
+        primaryColor: data.primaryColor,
+        secondaryColor: data.secondaryColor,
+        style: data.style,
+        layout: data.layout,
+        showVisualizer: data.showVisualizer,
+        showPlaylist: data.showPlaylist,
+        showVolume: data.showVolume,
+        showProgress: data.showProgress,
+        fontFamily: data.fontFamily,
       };
 
       const enhancedCode = generatePlayerCode(data);
@@ -93,14 +100,11 @@ const AIRadioPlayerGenerator = () => {
             setActiveStyleCategory={setActiveStyleCategory}
           />
           
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                Vista Previa en Tiempo Real
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex justify-center">
+          <div className="bg-card rounded-lg border p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              Vista Previa en Tiempo Real
+            </h3>
+            <div className="flex justify-center">
               <PlayerPreview 
                 style={form.watch("style")} 
                 radioName={form.watch("radioName") || "Mi Radio"} 
@@ -110,8 +114,8 @@ const AIRadioPlayerGenerator = () => {
                 showProgress={form.watch("showProgress")}
                 description={form.watch("description")}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
         
         <div className="space-y-6">
