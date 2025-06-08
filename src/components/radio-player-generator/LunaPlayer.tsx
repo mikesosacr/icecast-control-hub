@@ -34,12 +34,8 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
     backgroundRepeat: 'no-repeat'
   } : {};
 
-  const isHorizontal = data.layout === "horizontal";
-  const isMini = data.layout === "mini";
-  const isCard = data.layout === "card";
-  const isVertical = data.layout === "vertical";
-
-  if (isHorizontal) {
+  // Horizontal Layout
+  if (data.layout === "horizontal") {
     return (
       <div 
         className={`flex items-center gap-6 p-6 rounded-2xl w-full max-w-4xl mx-auto ${getLunaStyles()} relative`}
@@ -56,20 +52,14 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Radio Info */}
           <div className="text-left mb-4">
-            <h3 className="text-xl font-bold mb-1 truncate">
-              {data.radioName}
-            </h3>
+            <h3 className="text-xl font-bold mb-1 truncate">{data.radioName}</h3>
             {data.description && (
-              <p className="text-sm opacity-80 mb-2">
-                {data.description}
-              </p>
+              <p className="text-sm opacity-80 mb-2">{data.description}</p>
             )}
             <p className="text-xs opacity-60">Artista - Canción Actual</p>
           </div>
 
-          {/* Progress Bar */}
           {data.showProgress && (
             <div className="mb-4">
               <div className="h-1.5 bg-white/20 rounded-full overflow-hidden mb-2">
@@ -85,7 +75,6 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
 
         {/* Controls Section */}
         <div className="flex flex-col items-center gap-4 flex-shrink-0">
-          {/* Main Controls */}
           <div className="flex items-center gap-4">
             <button className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
               <Shuffle size={18} />
@@ -107,7 +96,6 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
             </button>
           </div>
 
-          {/* Secondary Controls */}
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsFavorite(!isFavorite)}
@@ -133,7 +121,6 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
             </button>
           </div>
 
-          {/* Live indicator */}
           <div className="flex items-center justify-center">
             <div className="flex items-center space-x-2 px-3 py-1 bg-red-500/20 rounded-full border border-red-500/30">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
@@ -145,13 +132,13 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
     );
   }
 
-  if (isMini) {
+  // Mini Layout
+  if (data.layout === "mini") {
     return (
       <div 
         className={`flex items-center gap-3 p-3 rounded-xl w-full max-w-sm mx-auto ${getLunaStyles()} relative`}
         style={containerStyle}
       >
-        {/* Album Art */}
         <div className="w-12 h-12 flex-shrink-0 rounded-lg bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center overflow-hidden">
           {data.logoImage ? (
             <img src={data.logoImage} alt={data.radioName} className="w-full h-full object-cover" />
@@ -160,12 +147,9 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
           )}
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0 text-left">
           <div className="mb-2">
-            <h3 className="text-sm font-bold mb-1 truncate">
-              {data.radioName}
-            </h3>
+            <h3 className="text-sm font-bold mb-1 truncate">{data.radioName}</h3>
           </div>
 
           <div className="flex items-center gap-2">
@@ -206,13 +190,13 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
     );
   }
 
-  // Default layout (vertical/card)
+  // Vertical and Card Layouts
+  const isCard = data.layout === "card";
   const containerClasses = isCard 
     ? "p-8 rounded-3xl w-full max-w-lg mx-auto shadow-2xl"
     : "p-6 rounded-2xl w-full max-w-md mx-auto";
   
   const albumArtSize = isCard ? "w-40 h-40" : "w-48 h-48";
-  const albumArtRounding = isCard ? "rounded-2xl" : "rounded-2xl";
 
   return (
     <div 
@@ -220,7 +204,7 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
       style={containerStyle}
     >
       {/* Album Art */}
-      <div className={`${albumArtSize} mx-auto mb-4 ${albumArtRounding} bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center overflow-hidden`}>
+      <div className={`${albumArtSize} mx-auto mb-4 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center overflow-hidden`}>
         {data.logoImage ? (
           <img src={data.logoImage} alt={data.radioName} className="w-full h-full object-cover" />
         ) : (
@@ -230,7 +214,6 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
 
       {/* Content */}
       <div className="w-full text-center">
-        {/* Radio Info */}
         <div className="text-center mb-6">
           <h3 className={`${isCard ? 'text-2xl' : 'text-xl'} font-bold mb-1 truncate`}>
             {data.radioName}
@@ -243,7 +226,6 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
           <p className="text-xs opacity-60">Artista - Canción Actual</p>
         </div>
 
-        {/* Progress Bar */}
         {data.showProgress && (
           <div className="mb-6">
             <div className={`${isCard ? 'h-2' : 'h-1.5'} bg-white/20 rounded-full overflow-hidden mb-2`}>

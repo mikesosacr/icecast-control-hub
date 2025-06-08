@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Play, Pause, Volume2, SkipBack, SkipForward, Music } from "lucide-react";
+import { Play, Pause, Volume2, SkipBack, SkipForward, Music, Heart, Share2 } from "lucide-react";
 import { FormData } from "./types";
 
 interface PlayerProps {
@@ -17,87 +17,135 @@ export const MinimalPlayer = ({ data }: PlayerProps) => {
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat'
   } : {};
+
+  const getFontClass = () => {
+    switch(data.fontFamily) {
+      case "inter": return "font-sans";
+      case "roboto": return "font-sans";
+      case "poppins": return "font-sans";
+      case "montserrat": return "font-sans";
+      default: return "font-sans";
+    }
+  };
+
+  const getLayoutClasses = () => {
+    switch(data.layout) {
+      case "horizontal": return "flex items-center gap-4 p-4";
+      case "vertical": return "flex flex-col items-center text-center p-6 space-y-4";
+      case "card": return "flex flex-col items-center text-center p-8 space-y-6 rounded-2xl";
+      case "mini": return "flex items-center gap-2 p-2";
+      default: return "flex items-center gap-4 p-4";
+    }
+  };
   
   return (
     <div 
-      className={`p-4 rounded-lg ${data.style === "minimal" ? "bg-white dark:bg-zinc-900 border" : 
-                        data.style === "compact" ? "bg-gray-100 dark:bg-gray-800 rounded-full flex items-center" :
-                        "bg-white/20 backdrop-blur-md border border-white/30"
-                      } w-full transition-all duration-300`}
-      style={containerStyle}
+      className={`${getFontClass()} ${getLayoutClasses()} ${
+        data.style === "minimal" ? "bg-card border shadow-sm" : 
+        data.style === "compact" ? "bg-muted rounded-full" :
+        "bg-card/80 backdrop-blur-sm border"
+      } w-full max-w-lg transition-all duration-300`}
+      style={{
+        ...containerStyle,
+        color: data.primaryColor
+      }}
     >
-      <div className={`${data.layout === "mini" ? "flex items-center space-x-3" : "space-y-3"}`}>
-        <div className={`${data.layout === "vertical" ? "text-center" : "flex items-center justify-between"}`}>
-          <div className="flex-1 flex items-center space-x-3">
-            {data.logoImage && data.layout !== "mini" && (
-              <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                <img src={data.logoImage} alt={data.radioName} className="w-full h-full object-cover" />
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="font-bold truncate text-sm">{data.radioName}</div>
-              {data.description && <div className="text-xs opacity-70 truncate">{data.description}</div>}
-            </div>
-          </div>
-          {data.layout !== "mini" && <div className="text-xs opacity-70 px-2 py-1 bg-red-500 text-white rounded">EN VIVO</div>}
+      {/* Album Art */}
+      {data.logoImage && data.layout !== "mini" && (
+        <div className={`${data.layout === "card" ? "w-24 h-24" : "w-12 h-12"} rounded-lg overflow-hidden flex-shrink-0`}>
+          <img src={data.logoImage} alt={data.radioName} className="w-full h-full object-cover" />
         </div>
-        
-        <div className={`${data.layout === "vertical" ? "flex flex-col items-center space-y-2" : "flex items-center space-x-3"}`}>
-          {data.showProgress && data.layout !== "mini" && (
-            <div className="flex-1">
-              <div className="h-1 bg-white/30 rounded-full overflow-hidden">
-                <div className="h-full bg-current w-1/3 rounded-full transition-all"></div>
-              </div>
-            </div>
+      )}
+
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className={`${data.layout === "vertical" || data.layout === "card" ? "text-center" : "text-left"}`}>
+          <div className={`font-bold truncate ${data.layout === "card" ? "text-lg" : "text-sm"}`}>
+            {data.radioName}
+          </div>
+          {data.description && (
+            <div className="text-xs opacity-70 truncate mt-1">{data.description}</div>
           )}
-          
-          <div className="flex items-center space-x-2">
-            {data.showVolume && data.layout !== "mini" && (
-              <>
-                <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors">
-                  <SkipBack size={14} />
-                </button>
-              </>
-            )}
-            
-            <button 
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
-            >
-              {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-            </button>
-            
-            {data.showVolume && data.layout !== "mini" && (
-              <>
-                <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors">
-                  <SkipForward size={14} />
-                </button>
-                <div className="flex items-center space-x-1">
-                  <Volume2 size={14} />
-                  <div className="w-16 h-1 bg-white/30 rounded-full">
-                    <div className="h-full bg-current rounded-full" style={{ width: `${volume}%` }}></div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
         </div>
-        
-        {data.showVisualizer && data.layout === "card" && (
-          <div className="flex items-center justify-center space-x-1 py-2">
-            {[...Array(12)].map((_, i) => (
+
+        {/* Progress Bar */}
+        {data.showProgress && data.layout !== "mini" && (
+          <div className="mt-3">
+            <div className="h-1 bg-muted rounded-full overflow-hidden">
               <div 
-                key={i}
-                className="w-1 bg-current rounded-full animate-pulse" 
+                className="h-full rounded-full transition-all" 
                 style={{ 
-                  height: `${Math.random() * 20 + 5}px`,
-                  animationDelay: `${i * 100}ms`
+                  backgroundColor: data.primaryColor,
+                  width: "33%" 
                 }}
               ></div>
-            ))}
+            </div>
           </div>
         )}
       </div>
+
+      {/* Controls */}
+      <div className={`flex items-center ${data.layout === "mini" ? "gap-1" : "gap-2"}`}>
+        {data.layout !== "mini" && (
+          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+            <SkipBack size={14} />
+          </button>
+        )}
+        
+        <button 
+          onClick={() => setIsPlaying(!isPlaying)}
+          className={`${data.layout === "mini" ? "w-8 h-8" : "w-10 h-10"} flex items-center justify-center rounded-full transition-colors`}
+          style={{ backgroundColor: data.primaryColor, color: 'white' }}
+        >
+          {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+        </button>
+        
+        {data.layout !== "mini" && (
+          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+            <SkipForward size={14} />
+          </button>
+        )}
+
+        {data.showVolume && data.layout !== "mini" && (
+          <div className="flex items-center gap-1 ml-2">
+            <Volume2 size={14} />
+            <div className="w-16 h-1 bg-muted rounded-full">
+              <div 
+                className="h-full rounded-full" 
+                style={{ 
+                  backgroundColor: data.primaryColor,
+                  width: `${volume}%` 
+                }}
+              ></div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Live indicator */}
+      <div className={`${data.layout === "mini" ? "ml-2" : ""}`}>
+        <div className="flex items-center space-x-1 px-2 py-1 bg-red-500/20 rounded border border-red-500/30">
+          <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+          <span className="text-xs font-medium text-red-600">LIVE</span>
+        </div>
+      </div>
+
+      {/* Visualizer */}
+      {data.showVisualizer && (data.layout === "card" || data.layout === "vertical") && (
+        <div className="flex items-end justify-center space-x-1 py-2">
+          {[...Array(12)].map((_, i) => (
+            <div 
+              key={i}
+              className="w-1 rounded-full animate-pulse" 
+              style={{ 
+                backgroundColor: data.primaryColor,
+                height: `${Math.random() * 20 + 5}px`,
+                animationDelay: `${i * 100}ms`
+              }}
+            ></div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -105,6 +153,7 @@ export const MinimalPlayer = ({ data }: PlayerProps) => {
 export const PremiumPlayer = ({ data }: PlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(75);
+  const [isFavorite, setIsFavorite] = useState(false);
   
   const getStyleClasses = () => {
     switch(data.style) {
@@ -126,12 +175,23 @@ export const PremiumPlayer = ({ data }: PlayerProps) => {
     backgroundRepeat: 'no-repeat'
   } : {};
 
+  const getFontClass = () => {
+    switch(data.fontFamily) {
+      case "inter": return "font-sans";
+      case "roboto": return "font-sans";
+      case "poppins": return "font-sans";
+      case "montserrat": return "font-sans";
+      default: return "font-sans";
+    }
+  };
+
   return (
     <div 
-      className={`p-6 rounded-xl ${getStyleClasses()} w-full transition-all duration-300`}
+      className={`${getFontClass()} p-6 rounded-xl ${getStyleClasses()} w-full max-w-2xl transition-all duration-300`}
       style={containerStyle}
     >
       <div className="space-y-4">
+        {/* Header */}
         <div className="flex justify-between items-start">
           <div className="flex-1 flex items-center space-x-4">
             {data.logoImage && (
@@ -154,10 +214,14 @@ export const PremiumPlayer = ({ data }: PlayerProps) => {
           </div>
         </div>
         
+        {/* Progress Bar */}
         {data.showProgress && (
           <div className="space-y-2">
             <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-white w-2/5 rounded-full transition-all duration-500"></div>
+              <div 
+                className="h-full w-2/5 rounded-full transition-all duration-500"
+                style={{ backgroundColor: data.primaryColor }}
+              ></div>
             </div>
             <div className="flex justify-between text-xs opacity-80">
               <span>02:34</span>
@@ -166,6 +230,7 @@ export const PremiumPlayer = ({ data }: PlayerProps) => {
           </div>
         )}
         
+        {/* Controls */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20 hover:bg-white/30 transition-all">
@@ -173,12 +238,21 @@ export const PremiumPlayer = ({ data }: PlayerProps) => {
             </button>
             <button 
               onClick={() => setIsPlaying(!isPlaying)}
-              className="w-14 h-14 rounded-full flex items-center justify-center bg-white/30 hover:bg-white/40 transition-all shadow-lg"
+              className="w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg"
+              style={{ backgroundColor: data.primaryColor }}
             >
               {isPlaying ? <Pause size={22} /> : <Play size={22} />}
             </button>
             <button className="w-10 h-10 rounded-full flex items-center justify-center bg-white/20 hover:bg-white/30 transition-all">
               <SkipForward size={18} />
+            </button>
+            <button 
+              onClick={() => setIsFavorite(!isFavorite)}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+                isFavorite ? 'bg-red-500' : 'bg-white/20 hover:bg-white/30'
+              }`}
+            >
+              <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
             </button>
           </div>
           
@@ -186,20 +260,28 @@ export const PremiumPlayer = ({ data }: PlayerProps) => {
             <div className="flex items-center space-x-3">
               <Volume2 size={18} />
               <div className="w-20 h-1.5 bg-white/20 rounded-full">
-                <div className="h-full bg-white rounded-full transition-all" style={{ width: `${volume}%` }}></div>
+                <div 
+                  className="h-full rounded-full transition-all" 
+                  style={{ 
+                    backgroundColor: data.primaryColor,
+                    width: `${volume}%` 
+                  }}
+                ></div>
               </div>
               <span className="text-xs w-8">{volume}%</span>
             </div>
           )}
         </div>
         
+        {/* Visualizer */}
         {data.showVisualizer && (
           <div className="flex items-end justify-center space-x-1 h-8">
             {[...Array(16)].map((_, i) => (
               <div 
                 key={i}
-                className="w-1.5 bg-white/60 rounded-full animate-pulse" 
+                className="w-1.5 rounded-full animate-pulse" 
                 style={{ 
+                  backgroundColor: data.primaryColor,
                   height: `${Math.random() * 24 + 8}px`,
                   animationDelay: `${i * 80}ms`,
                   animationDuration: `${Math.random() * 0.5 + 0.5}s`
@@ -222,17 +304,28 @@ export const VintagePlayer = ({ data }: PlayerProps) => {
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat'
   } : {};
+
+  const getFontClass = () => {
+    switch(data.fontFamily) {
+      case "inter": return "font-serif";
+      case "roboto": return "font-serif";
+      case "poppins": return "font-serif";
+      case "montserrat": return "font-serif";
+      default: return "font-serif";
+    }
+  };
   
   return (
     <div 
-      className={`p-5 rounded-lg ${
-        data.style === "retro" ? "bg-amber-100 dark:bg-amber-900 border-2 border-amber-700" : 
+      className={`${getFontClass()} p-5 rounded-lg ${
+        data.style === "retro" ? "bg-amber-100 dark:bg-amber-900 border-2 border-amber-700 text-amber-900 dark:text-amber-100" : 
         data.style === "vintage" ? "bg-gradient-to-b from-yellow-200 to-yellow-400 border-4 border-yellow-600 text-yellow-900" :
-        "bg-stone-200 dark:bg-stone-800 border-2 border-stone-400"
-      } w-full font-serif`}
+        "bg-stone-200 dark:bg-stone-800 border-2 border-stone-400 text-stone-900 dark:text-stone-100"
+      } w-full max-w-md`}
       style={containerStyle}
     >
       <div className="space-y-4">
+        {/* Header */}
         <div className="text-center flex items-center justify-center space-x-3">
           {data.logoImage && (
             <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-current">
@@ -245,10 +338,11 @@ export const VintagePlayer = ({ data }: PlayerProps) => {
           </div>
         </div>
         
+        {/* Radio Display */}
         <div className="relative">
           <div className="w-full h-20 bg-stone-300 dark:bg-stone-700 rounded border-2 border-stone-400 p-3 flex items-center">
             <div className="flex-1 flex items-center space-x-1">
-              {[...Array(20)].map((_, i) => (
+              {data.showVisualizer && [...Array(20)].map((_, i) => (
                 <div 
                   key={i}
                   className="w-1 bg-red-500 rounded-full animate-pulse" 
@@ -270,13 +364,19 @@ export const VintagePlayer = ({ data }: PlayerProps) => {
           </div>
         </div>
         
+        {/* Controls */}
         <div className="flex justify-center space-x-4">
           <button className="w-12 h-12 rounded-full border-2 border-current flex items-center justify-center hover:bg-current hover:text-white transition-all">
             <SkipBack size={16} />
           </button>
           <button 
             onClick={() => setIsPlaying(!isPlaying)}
-            className="w-16 h-16 rounded-full border-4 border-current flex items-center justify-center hover:bg-current hover:text-white transition-all shadow-lg"
+            className="w-16 h-16 rounded-full border-4 flex items-center justify-center transition-all shadow-lg"
+            style={{ 
+              borderColor: data.primaryColor,
+              backgroundColor: isPlaying ? data.primaryColor : 'transparent',
+              color: isPlaying ? 'white' : 'inherit'
+            }}
           >
             {isPlaying ? <Pause size={20} /> : <Play size={20} />}
           </button>
@@ -285,6 +385,7 @@ export const VintagePlayer = ({ data }: PlayerProps) => {
           </button>
         </div>
         
+        {/* Status */}
         <div className="text-center text-xs opacity-70">
           {isPlaying ? "♪ Reproduciendo..." : "● Pausado"}
         </div>
