@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Wand2, Download, Copy, Music, Palette, Settings, Play, Pause, Volume2, SkipBack, SkipForward } from "lucide-react";
+import { Loader2, Wand2, Download, Copy, Music, Palette, Settings, Play, Pause, Volume2, SkipBack, SkipForward, Heart, Share2, Repeat, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 
 // Enhanced schema for the form
@@ -23,7 +22,7 @@ const formSchema = z.object({
   description: z.string().optional(),
   primaryColor: z.string().optional(),
   secondaryColor: z.string().optional(),
-  style: z.enum(["minimal", "modernista", "retro", "neón", "glassmorphism", "compact", "premium", "vintage"]),
+  style: z.enum(["minimal", "modernista", "retro", "neón", "glassmorphism", "compact", "premium", "vintage", "luna-dark", "luna-light", "luna-gradient", "luna-glass"]),
   layout: z.enum(["horizontal", "vertical", "card", "mini"]),
   showVisualizer: z.boolean().optional(),
   showPlaylist: z.boolean().optional(),
@@ -32,7 +31,7 @@ const formSchema = z.object({
   fontFamily: z.enum(["inter", "roboto", "poppins", "montserrat"]).optional(),
 });
 
-// Enhanced player styles
+// Enhanced player styles with Luna player variants
 const playerStyles = [
   {
     id: "minimal",
@@ -89,6 +88,34 @@ const playerStyles = [
     description: "Estilo radio antigua",
     preview: "bg-gradient-to-b from-yellow-200 to-yellow-400 border-4 border-yellow-600 text-yellow-900",
     category: "themed"
+  },
+  {
+    id: "luna-dark",
+    name: "Luna Dark",
+    description: "Estilo Luna oscuro elegante",
+    preview: "bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 text-white shadow-2xl border border-purple-500/30",
+    category: "luna"
+  },
+  {
+    id: "luna-light",
+    name: "Luna Light",
+    description: "Estilo Luna claro y moderno",
+    preview: "bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-800 shadow-xl border border-blue-200",
+    category: "luna"
+  },
+  {
+    id: "luna-gradient",
+    name: "Luna Gradient",
+    description: "Gradientes dinámicos Luna",
+    preview: "bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white shadow-2xl",
+    category: "luna"
+  },
+  {
+    id: "luna-glass",
+    name: "Luna Glass",
+    description: "Efecto cristal inspirado en Luna",
+    preview: "bg-white/10 backdrop-blur-xl border border-white/20 text-white shadow-2xl",
+    category: "luna"
   }
 ];
 
@@ -107,6 +134,128 @@ const fontOptions = [
   { id: "poppins", name: "Poppins", description: "Amigable y redondeado" },
   { id: "montserrat", name: "Montserrat", description: "Elegante y profesional" }
 ];
+
+// Luna Player Component
+const LunaPlayer = ({ data }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(75);
+  const [isFavorite, setIsFavorite] = useState(false);
+  
+  const getLunaStyles = () => {
+    switch(data.style) {
+      case "luna-dark":
+        return "bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 text-white shadow-2xl border border-purple-500/30";
+      case "luna-light":
+        return "bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-800 shadow-xl border border-blue-200";
+      case "luna-gradient":
+        return "bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white shadow-2xl";
+      case "luna-glass":
+        return "bg-white/10 backdrop-blur-xl border border-white/20 text-white shadow-2xl";
+      default:
+        return "bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 text-white shadow-2xl";
+    }
+  };
+
+  return (
+    <div className={`p-6 rounded-2xl ${getLunaStyles()} w-full max-w-md mx-auto`}>
+      {/* Album Art & Info */}
+      <div className="text-center mb-6">
+        <div className="w-48 h-48 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center">
+          <Music size={64} className="opacity-60" />
+        </div>
+        <h3 className="text-xl font-bold mb-1 truncate">{data.radioName}</h3>
+        {data.description && <p className="text-sm opacity-80 mb-2">{data.description}</p>}
+        <p className="text-xs opacity-60">Artista - Canción Actual</p>
+      </div>
+
+      {/* Progress Bar */}
+      {data.showProgress && (
+        <div className="mb-6">
+          <div className="h-1.5 bg-white/20 rounded-full overflow-hidden mb-2">
+            <div className="h-full bg-gradient-to-r from-pink-400 to-purple-400 w-1/3 rounded-full transition-all duration-500"></div>
+          </div>
+          <div className="flex justify-between text-xs opacity-70">
+            <span>02:34</span>
+            <span>04:12</span>
+          </div>
+        </div>
+      )}
+
+      {/* Main Controls */}
+      <div className="flex items-center justify-center space-x-4 mb-6">
+        <button className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+          <Shuffle size={18} />
+        </button>
+        <button className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+          <SkipBack size={20} />
+        </button>
+        <button 
+          onClick={() => setIsPlaying(!isPlaying)}
+          className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 flex items-center justify-center transition-all shadow-lg"
+        >
+          {isPlaying ? <Pause size={24} /> : <Play size={24} />}
+        </button>
+        <button className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+          <SkipForward size={20} />
+        </button>
+        <button className="w-12 h-12 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+          <Repeat size={18} />
+        </button>
+      </div>
+
+      {/* Secondary Controls */}
+      <div className="flex items-center justify-between">
+        <button 
+          onClick={() => setIsFavorite(!isFavorite)}
+          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+            isFavorite ? 'bg-red-500 text-white' : 'bg-white/20 hover:bg-white/30'
+          }`}
+        >
+          <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
+        </button>
+
+        {data.showVolume && (
+          <div className="flex items-center space-x-2 flex-1 mx-4">
+            <Volume2 size={16} />
+            <div className="flex-1 h-1.5 bg-white/20 rounded-full">
+              <div className="h-full bg-gradient-to-r from-pink-400 to-purple-400 rounded-full transition-all" style={{ width: `${volume}%` }}></div>
+            </div>
+            <span className="text-xs w-8">{volume}%</span>
+          </div>
+        )}
+
+        <button className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+          <Share2 size={16} />
+        </button>
+      </div>
+
+      {/* Visualizer */}
+      {data.showVisualizer && (
+        <div className="flex items-end justify-center space-x-1 mt-6 h-8">
+          {[...Array(20)].map((_, i) => (
+            <div 
+              key={i}
+              className="w-1 bg-gradient-to-t from-pink-400 to-purple-400 rounded-full animate-pulse" 
+              style={{ 
+                height: `${Math.random() * 24 + 8}px`,
+                animationDelay: `${i * 50}ms`,
+                animationDuration: `${Math.random() * 0.5 + 0.5}s`
+              }}
+            ></div>
+          ))}
+        </div>
+      )}
+
+      {/* Live indicator */}
+      <div className="flex items-center justify-center mt-4">
+        <div className="flex items-center space-x-2 px-3 py-1 bg-red-500/20 rounded-full border border-red-500/30">
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+          <span className="text-xs font-medium">EN VIVO</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Enhanced player components
 const MinimalPlayer = ({ data }) => {
@@ -344,11 +493,13 @@ const VintagePlayer = ({ data }) => {
   );
 };
 
-// Player preview component
-const PlayerPreview = ({ style, radioName, layout, showVisualizer, showVolume, showProgress }) => {
-  const data = { style, radioName, layout, showVisualizer, showVolume, showProgress };
+// Enhanced Player preview component
+const PlayerPreview = ({ style, radioName, layout, showVisualizer, showVolume, showProgress, description }) => {
+  const data = { style, radioName, layout, showVisualizer, showVolume, showProgress, description };
   
-  if (["retro", "vintage"].includes(style)) {
+  if (style.startsWith("luna-")) {
+    return <LunaPlayer data={data} />;
+  } else if (["retro", "vintage"].includes(style)) {
     return <VintagePlayer data={data} />;
   } else if (["premium", "modernista", "neón"].includes(style)) {
     return <PremiumPlayer data={data} />;
@@ -488,6 +639,14 @@ export default AIRadioPlayer;
     const baseClasses = "p-4 rounded-lg w-full transition-all duration-300";
     
     switch(data.style) {
+      case "luna-dark":
+        return `${baseClasses} bg-gradient-to-br from-gray-900 via-purple-900 to-violet-900 text-white shadow-2xl border border-purple-500/30`;
+      case "luna-light":
+        return `${baseClasses} bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-800 shadow-xl border border-blue-200`;
+      case "luna-gradient":
+        return `${baseClasses} bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white shadow-2xl`;
+      case "luna-glass":
+        return `${baseClasses} bg-white/10 backdrop-blur-xl border border-white/20 text-white shadow-2xl`;
       case "minimal":
         return `${baseClasses} bg-white dark:bg-zinc-900 text-black dark:text-white border shadow-sm`;
       case "modernista":
@@ -593,6 +752,7 @@ export default AIRadioPlayer;
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Basic Info Section */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -655,21 +815,24 @@ export default AIRadioPlayer;
                     )}
                   />
                   
+                  {/* Style Selection Section - Reorganized */}
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <FormLabel className="text-base">Estilo del Reproductor</FormLabel>
-                      <div className="flex gap-1">
-                        {["all", "basic", "premium", "themed"].map(category => (
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <FormLabel className="text-base font-semibold">Estilo del Reproductor</FormLabel>
+                      <div className="flex flex-wrap gap-1">
+                        {["all", "basic", "premium", "themed", "luna"].map(category => (
                           <Button
                             key={category}
                             type="button"
                             variant={activeStyleCategory === category ? "default" : "outline"}
                             size="sm"
                             onClick={() => setActiveStyleCategory(category)}
+                            className="text-xs"
                           >
                             {category === "all" ? "Todos" : 
                              category === "basic" ? "Básicos" :
-                             category === "premium" ? "Premium" : "Temáticos"}
+                             category === "premium" ? "Premium" : 
+                             category === "themed" ? "Temáticos" : "Luna"}
                           </Button>
                         ))}
                       </div>
@@ -680,24 +843,30 @@ export default AIRadioPlayer;
                       name="style"
                       render={({ field }) => (
                         <FormItem>
-                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                             {filteredStyles.map(style => (
                               <div key={style.id} className="text-center">
                                 <FormControl>
                                   <button
                                     type="button"
-                                    className={`w-full h-16 rounded-md border-2 transition-all text-xs ${
+                                    className={`w-full h-20 rounded-xl border-2 transition-all text-xs font-medium relative overflow-hidden ${
                                       field.value === style.id
-                                        ? "border-primary ring-2 ring-primary ring-opacity-50"
-                                        : "border-transparent hover:border-muted-foreground/25"
+                                        ? "border-primary ring-2 ring-primary ring-opacity-50 scale-105"
+                                        : "border-muted hover:border-muted-foreground/50 hover:scale-102"
                                     } ${style.preview}`}
                                     onClick={() => field.onChange(style.id)}
                                   >
-                                    {style.name}
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="text-center p-2">
+                                        <div className="font-semibold">{style.name}</div>
+                                      </div>
+                                    </div>
                                   </button>
                                 </FormControl>
-                                <div className="text-xs mt-1 font-medium">{style.name}</div>
-                                <div className="text-xs text-muted-foreground">{style.description}</div>
+                                <div className="mt-2">
+                                  <div className="text-sm font-medium">{style.name}</div>
+                                  <div className="text-xs text-muted-foreground">{style.description}</div>
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -861,7 +1030,7 @@ export default AIRadioPlayer;
                 Vista Previa en Tiempo Real
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex justify-center">
               <PlayerPreview 
                 style={form.watch("style")} 
                 radioName={form.watch("radioName") || "Mi Radio"} 
@@ -869,6 +1038,7 @@ export default AIRadioPlayer;
                 showVisualizer={form.watch("showVisualizer")}
                 showVolume={form.watch("showVolume")}
                 showProgress={form.watch("showProgress")}
+                description={form.watch("description")}
               />
             </CardContent>
           </Card>
@@ -900,6 +1070,7 @@ export default AIRadioPlayer;
                         showVisualizer={selectedPlayer.showVisualizer}
                         showVolume={selectedPlayer.showVolume}
                         showProgress={selectedPlayer.showProgress}
+                        description={selectedPlayer.description}
                       />
                     )}
                   </CardContent>
