@@ -48,6 +48,7 @@ export interface GeneratedPlayer {
   style: string;
   layout: string;
   showVisualizer?: boolean;
+  showPlaylist?: boolean;
   showVolume?: boolean;
   showProgress?: boolean;
   primaryColor?: string;
