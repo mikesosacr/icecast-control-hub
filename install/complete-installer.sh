@@ -1,24 +1,24 @@
 #!/bin/bash
 set -e
 
-# Colores
+# Colors for terminal output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
-NC='\033[0m'
+NC='\033[0m' # No Color
 
 echo -e "${BLUE}================================================================${NC}"
-echo -e "${BLUE}     Panel Admin Icecast2 - Instalador Completo Ubuntu          ${NC}"
+echo -e "${BLUE}    Icecast2 Admin Panel - Instalador Completo Ubuntu          ${NC}"
 echo -e "${BLUE}================================================================${NC}"
 
-# Verificar ejecución como root
+# Check if running as root
 if [ "$EUID" -ne 0 ]; then
   echo -e "${RED}Por favor ejecutar como root o con sudo.${NC}"
   exit 1
 fi
 
-# Crear log file
+# Create log file
 LOGFILE="/var/log/icecast-admin-install.log"
 touch $LOGFILE
 echo "Instalación iniciada: $(date)" > $LOGFILE
@@ -26,43 +26,44 @@ exec > >(tee -a $LOGFILE)
 exec 2>&1
 echo -e "${GREEN}Log de instalación: ${LOGFILE}${NC}"
 
-# Obtener IP pública confiable
+# Get public server IP address (reliable method)
 SERVER_IP=$(curl -s https://api.ipify.org) 
 
-# Fallback si curl falla o devuelve IP privada
+# Fallback in case curl fails or returns empty/private IP
 if [ -z "$SERVER_IP" ] || [[ "$SERVER_IP" =~ ^(10\.|172\.1[6-9]\.|172\.2[0-9]\.|172\.3[0-1]\.|192\.168\.|127\.) ]]; then
     echo -e "${YELLOW}No se pudo obtener la IP pública, intentando con hostname...${NC}"
     SERVER_IP=$(hostname -I | tr ' ' '\n' | grep -vE '^(10\.|172\.1[6-9]\.|172\.2[0-9]\.|172\.3[0-1]\.|192\.168\.|127\.)' | head -n1)
 fi
 
+# Final fallback
 if [ -z "$SERVER_IP" ]; then
     SERVER_IP="localhost"
 fi
 
 echo -e "${GREEN}IP del servidor detectada: ${SERVER_IP}${NC}"
 
-# Directorio base
+# Application directory
 APP_DIR="/opt/icecast-admin"
 
-# Credenciales predeterminadas
+# Default credentials
 ICECAST_PORT=8000
 ICECAST_ADMIN_USER="admin"
 ICECAST_ADMIN_PASS=""
 ICECAST_SOURCE_PASS=""
 
-# Ruta del repo frontend
 FRONTEND_REPO="https://github.com/mikesosacr/icecast-control-hub.git" 
 FRONTEND_BRANCH="main"
-FRONTEND_DIR="$APP_DIR/frontend"
 
-# Función para detectar Icecast2
+# Function to detect existing Icecast installation
 detect_icecast() {
     echo -e "${BLUE}Detectando instalación existente de Icecast2...${NC}"
     ICECAST_INSTALLED=false
     ICECAST_CONFIG_PATH=""
+    # Check if icecast2 command exists
     if command -v icecast2 &> /dev/null; then
         ICECAST_INSTALLED=true
         echo -e "${GREEN}✓ Icecast2 encontrado en el sistema${NC}"
+        # Look for config file in common locations
         for config_path in "/etc/icecast2/icecast.xml" "/etc/icecast/icecast.xml" "/usr/local/etc/icecast.xml"; do
             if [ -f "$config_path" ]; then
                 ICECAST_CONFIG_PATH="$config_path"
@@ -70,12 +71,14 @@ detect_icecast() {
                 break
             fi
         done
-        # Extraer configuración existente
-        if [ -n "$ICECAST_CONFIG_PATH" ]; then
+        # Extract existing configuration if found
+        if [ -n "$ICECAST_CONFIG_PATH" ] && [ -f "$ICECAST_CONFIG_PATH" ]; then
+            # Extract port
             PORT_MATCH=$(grep -o '<port>[0-9]*</port>' "$ICECAST_CONFIG_PATH" | head -1 | grep -o '[0-9]*')
             if [ -n "$PORT_MATCH" ]; then
                 ICECAST_PORT=$PORT_MATCH
             fi
+            # Extract admin credentials
             ADMIN_USER_MATCH=$(grep -o '<admin-user>[^<]*</admin-user>' "$ICECAST_CONFIG_PATH" | head -1 | sed 's/<[^>]*>//g')
             if [ -n "$ADMIN_USER_MATCH" ]; then
                 ICECAST_ADMIN_USER="$ADMIN_USER_MATCH"
@@ -96,7 +99,7 @@ detect_icecast() {
     fi
 }
 
-# Función para configurar credenciales
+# Function to configure credentials
 configure_credentials() {
     echo -e "${BLUE}Configurando credenciales de administración...${NC}"
     if [ -n "$ICECAST_ADMIN_USER" ] && [ -n "$ICECAST_ADMIN_PASS" ]; then
@@ -114,7 +117,7 @@ configure_credentials() {
     fi
 }
 
-# Función para nuevas credenciales
+# Function to configure new credentials
 configure_new_credentials() {
     echo -e "${BLUE}Configurando nuevas credenciales...${NC}"
     echo -e "${YELLOW}Ingrese el usuario administrador (default: admin):${NC}"
@@ -130,6 +133,7 @@ configure_new_credentials() {
     else
         ICECAST_ADMIN_PASS="$new_admin_pass"
     fi
+    # Source password
     if [ -z "$ICECAST_SOURCE_PASS" ]; then
         echo -e "${YELLOW}Ingrese la contraseña de source (default: hackme):${NC}"
         read -s new_source_pass
@@ -138,11 +142,12 @@ configure_new_credentials() {
     fi
 }
 
-# Función para instalar dependencias
+# Function to install dependencies
 install_dependencies() {
     echo -e "${BLUE}Instalando dependencias del sistema...${NC}"
     apt-get update
     apt-get install -y curl wget gnupg2 ca-certificates lsb-release apt-transport-https nginx supervisor git
+    # Install Node.js
     echo -e "${GREEN}Instalando Node.js...${NC}"
     if ! command -v node &> /dev/null; then
         curl -fsSL https://deb.nodesource.com/setup_18.x  | bash -
@@ -150,6 +155,7 @@ install_dependencies() {
     else
         echo -e "${GREEN}✓ Node.js ya está instalado${NC}"
     fi
+    # Install Icecast2 if not present
     if [ "$ICECAST_INSTALLED" = false ]; then
         echo -e "${GREEN}Instalando Icecast2...${NC}"
         apt-get install -y icecast2
@@ -157,11 +163,13 @@ install_dependencies() {
     fi
 }
 
-# Función para configurar app
+# Function to setup application
 setup_application() {
     echo -e "${BLUE}Configurando aplicación del panel...${NC}"
-    mkdir -p $APP_DIR
-    cat > $APP_DIR/.env << EOF
+    # Create application directory
+    mkdir -p "$APP_DIR"
+    # Setup environment file
+    cat > "$APP_DIR/.env" << EOF
 # API Configuration
 VITE_API_BASE_URL=http://${SERVER_IP}:3000/api
 ICECAST_CONFIG_PATH=${ICECAST_CONFIG_PATH}
@@ -170,19 +178,268 @@ ICECAST_ADMIN_PASSWORD=${ICECAST_ADMIN_PASS}
 ICECAST_PORT=${ICECAST_PORT}
 PORT=3000
 EOF
-    # Clonar frontend
-    echo -e "${BLUE}Clonando frontend desde GitHub...${NC}"
-    rm -rf $FRONTEND_DIR
-    git clone -b $FRONTEND_BRANCH $FRONTEND_REPO $FRONTEND_DIR
-    cd $FRONTEND_DIR
+    # Create package.json
+    cat > "$APP_DIR/package.json" << EOF
+{
+  "name": "icecast-admin",
+  "version": "1.0.0",
+  "description": "Panel de administración para Icecast2",
+  "main": "api/server.js",
+  "scripts": {
+    "start": "node api/server.js",
+    "build": "echo 'Build completed'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "xml2js": "^0.6.2",
+    "fs-extra": "^11.1.1",
+    "basic-auth": "^2.0.1",
+    "dotenv": "^16.3.1"
+  }
+}
+EOF
+
+    # Clone your frontend repository
+    FRONTEND_DIR="$APP_DIR/frontend"
+    echo -e "${BLUE}Clonando tu frontend desde GitHub...${NC}"
+    rm -rf "$FRONTEND_DIR"
+    git clone -b "$FRONTEND_BRANCH" "$FRONTEND_REPO" "$FRONTEND_DIR"
+    cd "$FRONTEND_DIR"
     echo -e "${BLUE}Instalando dependencias del frontend...${NC}"
     npm install
     echo -e "${BLUE}Construyendo el frontend...${NC}"
     npm run build
-    cp -r dist/* $APP_DIR/dist/
+
+    # Ensure dist directory exists
+    mkdir -p "$APP_DIR/dist"
+    cp -r dist/* "$APP_DIR/dist/" || cp -r dist/. "$APP_DIR/dist/"
+
+    # Copy server.js
+    echo -e "${BLUE}Copiando backend Express...${NC}"
+    mkdir -p "$APP_DIR/api"
+    cat > "$APP_DIR/api/server.js" << 'EOF'
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs-extra');
+const { exec } = require('child_process');
+const xml2js = require('xml2js');
+const path = require('path');
+const basicAuth = require('basic-auth');
+require('dotenv').config();
+const app = express();
+const PORT = process.env.PORT || 3000;
+const ICECAST_CONFIG_PATH = process.env.ICECAST_CONFIG_PATH || '/etc/icecast2/icecast.xml';
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../dist')));
+// Auth middleware
+const auth = (req, res, next) => {
+  const user = basicAuth(req);
+  if (!user || user.name !== process.env.ICECAST_ADMIN_USERNAME || user.pass !== process.env.ICECAST_ADMIN_PASSWORD) {
+    res.set('WWW-Authenticate', 'Basic realm="Icecast Panel API"');
+    return res.status(401).send('Authentication required');
+  }
+  return next();
+};
+const apiRouter = express.Router();
+// Public endpoints
+apiRouter.get('/server-health', (req, res) => {
+  exec('command -v icecast2', (error) => {
+    if (error) {
+      return res.status(404).json({
+        available: false,
+        message: 'Icecast2 no está instalado'
+      });
+    }
+    exec('systemctl is-active icecast2', (error, stdout) => {
+      const status = stdout.trim() === 'active' ? 'running' : 'stopped';
+      res.json({
+        available: true,
+        status,
+        configPath: ICECAST_CONFIG_PATH
+      });
+    });
+  });
+});
+apiRouter.get('/server-status', (req, res) => {
+  exec('command -v icecast2', (error) => {
+    if (error) {
+      return res.json({ installed: false });
+    }
+    exec('icecast2 -v 2>&1', (error, stdout, stderr) => {
+      let version = 'unknown';
+      const output = stdout + stderr;
+      const match = output.match(/Icecast (\d+\.\d+\.\d+)/i);
+      if (match) version = match[1];
+      let port = 8000;
+      if (fs.existsSync(ICECAST_CONFIG_PATH)) {
+        try {
+          const config = fs.readFileSync(ICECAST_CONFIG_PATH, 'utf8');
+          const portMatch = config.match(/<port>(\d+)<\/port>/i);
+          if (portMatch) port = parseInt(portMatch[1], 10);
+        } catch (err) {
+          console.error("Error leyendo config:", err);
+        }
+      }
+      res.json({
+        installed: true,
+        version,
+        configPath: ICECAST_CONFIG_PATH,
+        port
+      });
+    });
+  });
+});
+// Protected endpoints
+apiRouter.use(auth);
+// Server control endpoints
+apiRouter.get('/servers/:serverId/status', (req, res) => {
+  exec('systemctl is-active icecast2', (error, stdout) => {
+    const status = stdout.trim() === 'active' ? 'running' : 'stopped';
+    res.json({ success: true, data: { status } });
+  });
+});
+apiRouter.post('/servers/:serverId/start', (req, res) => {
+  exec('systemctl start icecast2', (error) => {
+    if (error) {
+      return res.status(500).json({ success: false, error: 'Error al iniciar Icecast' });
+    }
+    res.json({ success: true, data: { status: 'running' } });
+  });
+});
+apiRouter.post('/servers/:serverId/stop', (req, res) => {
+  exec('systemctl stop icecast2', (error) => {
+    if (error) {
+      return res.status(500).json({ success: false, error: 'Error al detener Icecast' });
+    }
+    res.json({ success: true, data: { status: 'stopped' } });
+  });
+});
+apiRouter.post('/servers/:serverId/restart', (req, res) => {
+  exec('systemctl restart icecast2', (error) => {
+    if (error) {
+      return res.status(500).json({ success: false, error: 'Error al reiniciar Icecast' });
+    }
+    res.json({ success: true, data: { status: 'running' } });
+  });
+});
+// Stats endpoint
+apiRouter.get('/servers/:serverId/stats', (req, res) => {
+  const adminUser = process.env.ICECAST_ADMIN_USERNAME;
+  const adminPass = process.env.ICECAST_ADMIN_PASSWORD;
+  const port = process.env.ICECAST_PORT || 8000;
+  exec(`curl -s http://${adminUser}:${adminPass}@localhost:${port}/admin/stats.xml`, (error, stdout) => {
+    if (error) {
+      return res.status(500).json({ success: false, error: 'Error obteniendo estadísticas' });
+    }
+    xml2js.parseString(stdout, (err, result) => {
+      if (err) {
+        return res.status(500).json({ success: false, error: 'Error procesando XML' });
+      }
+      try {
+        const icestats = result.icestats || {};
+        const stats = {
+          uptime: parseInt(icestats.uptime?.[0] || 0, 10),
+          connections: {
+            current: parseInt(icestats.connections?.[0] || 0, 10),
+            peak: parseInt(icestats.connections_peak?.[0] || 0, 10),
+          },
+          bandwidth: {
+            incoming: parseFloat(icestats.inbound_kbitrate?.[0] || 0),
+            outgoing: parseFloat(icestats.outbound_kbitrate?.[0] || 0),
+          },
+          cpu: 0,
+          memory: 0,
+          totalConnections: parseInt(icestats.connections_total?.[0] || 0, 10),
+          version: icestats.server_id?.[0] || 'Unknown',
+        };
+        res.json({ success: true, data: stats });
+      } catch (e) {
+        res.status(500).json({ success: false, error: 'Error extrayendo estadísticas' });
+      }
+    });
+  });
+});
+// Mountpoints endpoint
+apiRouter.get('/servers/:serverId/mountpoints', (req, res) => {
+  const adminUser = process.env.ICECAST_ADMIN_USERNAME;
+  const adminPass = process.env.ICECAST_ADMIN_PASSWORD;
+  const port = process.env.ICECAST_PORT || 8000;
+  exec(`curl -s http://${adminUser}:${adminPass}@localhost:${port}/admin/stats.xml`, (error, stdout) => {
+    if (error) {
+      return res.status(500).json({ success: false, error: 'Error obteniendo mountpoints' });
+    }
+    xml2js.parseString(stdout, (err, result) => {
+      if (err) {
+        return res.status(500).json({ success: false, error: 'Error procesando XML' });
+      }
+      try {
+        const icestats = result.icestats || {};
+        const sources = icestats.source || [];
+        const mountpoints = sources.map((source, index) => ({
+          id: String(index + 1),
+          name: source.server_name?.[0] || source.$.mount,
+          point: source.$.mount,
+          type: source.server_type?.[0] || 'audio/mpeg',
+          bitrate: parseInt(source.bitrate?.[0] || 0, 10),
+          description: source.server_description?.[0] || '',
+          genre: source.genre?.[0] || '',
+          streamUrl: `http://${req.get('host').split(':')[0]}:${port}${source.$.mount}`,
+          listeners: {
+            current: parseInt(source.listeners?.[0] || 0, 10),
+            peak: parseInt(source.listener_peak?.[0] || 0, 10),
+          },
+          streamUser: 'source',
+          streamPassword: '****',
+          isPublic: true,
+          status: 'active'
+        }));
+        res.json({ success: true, data: mountpoints });
+      } catch (e) {
+        res.status(500).json({ success: false, error: 'Error extrayendo mountpoints' });
+      }
+    });
+  });
+});
+// Config endpoints
+apiRouter.get('/servers/:serverId/config', async (req, res) => {
+  try {
+    const configXml = await fs.readFile(ICECAST_CONFIG_PATH, 'utf8');
+    res.json({ success: true, data: configXml });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+apiRouter.put('/servers/:serverId/config', async (req, res) => {
+  try {
+    const { config } = req.body;
+    await fs.copy(ICECAST_CONFIG_PATH, `${ICECAST_CONFIG_PATH}.bak.${Date.now()}`);
+    await fs.writeFile(ICECAST_CONFIG_PATH, config);
+    exec('systemctl restart icecast2', (error) => {
+      if (error) {
+        return res.status(500).json({ success: false, error: 'Error reiniciando tras actualizar config' });
+      }
+      res.json({ success: true });
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+app.use('/api', apiRouter);
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
+app.listen(PORT, () => {
+  console.log(\`API server corriendo en puerto \${PORT}\`);
+});
+EOF
+
+    # Install npm packages
+    cd "$APP_DIR" && npm install
 }
 
-# Función para configurar Icecast
+# Function to configure Icecast
 configure_icecast() {
     echo -e "${BLUE}Configurando Icecast2...${NC}"
     if [ -f "$ICECAST_CONFIG_PATH" ]; then
@@ -245,14 +502,16 @@ configure_icecast() {
     </security>
 </icecast>
 EOF
+    # Enable Icecast2
     if [ -f /etc/default/icecast2 ]; then
         sed -i 's/ENABLE=false/ENABLE=true/' /etc/default/icecast2
     fi
 }
 
-# Función para servicios
+# Function to setup services
 setup_services() {
     echo -e "${BLUE}Configurando servicios...${NC}"
+    # Supervisor config
     cat > /etc/supervisor/conf.d/icecast-admin.conf << EOF
 [program:icecast-admin]
 directory=${APP_DIR}
@@ -264,6 +523,7 @@ environment=NODE_ENV=production
 stdout_logfile=/var/log/icecast-admin.log
 stderr_logfile=/var/log/icecast-admin-error.log
 EOF
+    # Nginx config
     cat > /etc/nginx/sites-available/icecast-admin << EOF
 server {
     listen 80;
@@ -285,7 +545,7 @@ EOF
     rm -f /etc/nginx/sites-enabled/default
 }
 
-# Función para firewall
+# Function to configure firewall
 configure_firewall() {
     echo -e "${BLUE}Configurando firewall...${NC}"
     if iptables -L | grep -q "Chain INPUT.*DROP"; then
@@ -302,7 +562,7 @@ configure_firewall() {
     fi
 }
 
-# Función para iniciar servicios
+# Function to start services
 start_services() {
     echo -e "${BLUE}Iniciando servicios...${NC}"
     systemctl restart icecast2
@@ -313,9 +573,9 @@ start_services() {
     supervisorctl start icecast-admin
 }
 
-# Información final
+# Function to create info file
 create_info_file() {
-    cat > $APP_DIR/INSTALL_INFO.md << EOF
+    cat > "$APP_DIR/INSTALL_INFO.md" << EOF
 # Información de Instalación - Icecast Admin Panel
 ## Instalación completada: $(date)
 ### Acceso al Panel
@@ -336,7 +596,7 @@ create_info_file() {
 EOF
 }
 
-# Flujo principal
+# Main flow
 main() {
     echo -e "${GREEN}Iniciando instalación completa...${NC}"
     detect_icecast
@@ -352,6 +612,11 @@ main() {
     echo -e "${GREEN}Icecast Admin: http://${SERVER_IP}:${ICECAST_PORT}/admin/${NC}"
     echo -e "${GREEN}Usuario: ${ICECAST_ADMIN_USER}${NC}"
     echo -e "${GREEN}Contraseña: ${ICECAST_ADMIN_PASS}${NC}"
+    echo -e "${GREEN}================================================================${NC}"
+    echo -e "${YELLOW}📋 Info completa guardada en: ${APP_DIR}/INSTALL_INFO.md${NC}"
+    echo -e "${YELLOW}📋 Logs en: ${LOGFILE}${NC}"
+    echo -e "${GREEN}================================================================${NC}"
 }
 
+# Run main function
 main
