@@ -7,9 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
-import { Loader2, Wand2, Settings } from "lucide-react";
+import { Loader2, Wand2, Settings, ImageIcon } from "lucide-react";
 import { FormData } from "./types";
 import { playerStyles, layoutOptions, fontOptions } from "./constants";
+import { ImageUpload } from "./ImageUpload";
 
 interface ConfigurationFormProps {
   form: UseFormReturn<FormData>;
@@ -66,7 +67,7 @@ export const ConfigurationForm = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Diseño</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecciona un diseño" />
@@ -106,6 +107,52 @@ export const ConfigurationForm = ({
                 </FormItem>
               )}
             />
+
+            {/* Images Section */}
+            <div className="space-y-4">
+              <FormLabel className="text-base flex items-center gap-2">
+                <ImageIcon className="h-4 w-4" />
+                Personalización Visual
+              </FormLabel>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="backgroundImage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <ImageUpload
+                          label="Imagen de Fondo"
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Añade una imagen de fondo para tu reproductor"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="logoImage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <ImageUpload
+                          label="Logo de la Radio"
+                          value={field.value}
+                          onChange={field.onChange}
+                          placeholder="Sube el logo de tu radio"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
             
             {/* Style Selection Section */}
             <div className="space-y-4">
@@ -270,7 +317,7 @@ export const ConfigurationForm = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Fuente</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />

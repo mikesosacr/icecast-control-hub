@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Play, Pause, Volume2, SkipBack, SkipForward } from "lucide-react";
+import { Play, Pause, Volume2, SkipBack, SkipForward, Music } from "lucide-react";
 import { FormData } from "./types";
 
 interface PlayerProps {
@@ -11,16 +11,33 @@ export const MinimalPlayer = ({ data }: PlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(80);
   
+  const containerStyle = data.backgroundImage ? {
+    backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), url(${data.backgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat'
+  } : {};
+  
   return (
-    <div className={`p-4 rounded-lg ${data.style === "minimal" ? "bg-white dark:bg-zinc-900 border" : 
-                      data.style === "compact" ? "bg-gray-100 dark:bg-gray-800 rounded-full flex items-center" :
-                      "bg-white/20 backdrop-blur-md border border-white/30"
-                    } w-full transition-all duration-300`}>
+    <div 
+      className={`p-4 rounded-lg ${data.style === "minimal" ? "bg-white dark:bg-zinc-900 border" : 
+                        data.style === "compact" ? "bg-gray-100 dark:bg-gray-800 rounded-full flex items-center" :
+                        "bg-white/20 backdrop-blur-md border border-white/30"
+                      } w-full transition-all duration-300`}
+      style={containerStyle}
+    >
       <div className={`${data.layout === "mini" ? "flex items-center space-x-3" : "space-y-3"}`}>
         <div className={`${data.layout === "vertical" ? "text-center" : "flex items-center justify-between"}`}>
-          <div className="flex-1">
-            <div className="font-bold truncate text-sm">{data.radioName}</div>
-            {data.description && <div className="text-xs opacity-70 truncate">{data.description}</div>}
+          <div className="flex-1 flex items-center space-x-3">
+            {data.logoImage && data.layout !== "mini" && (
+              <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                <img src={data.logoImage} alt={data.radioName} className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="font-bold truncate text-sm">{data.radioName}</div>
+              {data.description && <div className="text-xs opacity-70 truncate">{data.description}</div>}
+            </div>
           </div>
           {data.layout !== "mini" && <div className="text-xs opacity-70 px-2 py-1 bg-red-500 text-white rounded">EN VIVO</div>}
         </div>
@@ -102,14 +119,31 @@ export const PremiumPlayer = ({ data }: PlayerProps) => {
     }
   };
 
+  const containerStyle = data.backgroundImage ? {
+    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${data.backgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat'
+  } : {};
+
   return (
-    <div className={`p-6 rounded-xl ${getStyleClasses()} w-full transition-all duration-300`}>
+    <div 
+      className={`p-6 rounded-xl ${getStyleClasses()} w-full transition-all duration-300`}
+      style={containerStyle}
+    >
       <div className="space-y-4">
         <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <h3 className="font-bold text-xl mb-1">{data.radioName}</h3>
-            {data.description && <p className="text-sm opacity-80">{data.description}</p>}
-            <p className="text-xs opacity-60 mt-1">Artista - Canción Actual</p>
+          <div className="flex-1 flex items-center space-x-4">
+            {data.logoImage && (
+              <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                <img src={data.logoImage} alt={data.radioName} className="w-full h-full object-cover" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-xl mb-1 truncate">{data.radioName}</h3>
+              {data.description && <p className="text-sm opacity-80 truncate">{data.description}</p>}
+              <p className="text-xs opacity-60 mt-1">Artista - Canción Actual</p>
+            </div>
           </div>
           <div className="flex flex-col items-end">
             <div className="flex items-center mb-2">
@@ -181,17 +215,34 @@ export const PremiumPlayer = ({ data }: PlayerProps) => {
 
 export const VintagePlayer = ({ data }: PlayerProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const containerStyle = data.backgroundImage ? {
+    backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url(${data.backgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat'
+  } : {};
   
   return (
-    <div className={`p-5 rounded-lg ${
-      data.style === "retro" ? "bg-amber-100 dark:bg-amber-900 border-2 border-amber-700" : 
-      data.style === "vintage" ? "bg-gradient-to-b from-yellow-200 to-yellow-400 border-4 border-yellow-600 text-yellow-900" :
-      "bg-stone-200 dark:bg-stone-800 border-2 border-stone-400"
-    } w-full font-serif`}>
+    <div 
+      className={`p-5 rounded-lg ${
+        data.style === "retro" ? "bg-amber-100 dark:bg-amber-900 border-2 border-amber-700" : 
+        data.style === "vintage" ? "bg-gradient-to-b from-yellow-200 to-yellow-400 border-4 border-yellow-600 text-yellow-900" :
+        "bg-stone-200 dark:bg-stone-800 border-2 border-stone-400"
+      } w-full font-serif`}
+      style={containerStyle}
+    >
       <div className="space-y-4">
-        <div className="text-center">
-          <div className="font-bold text-lg mb-1">{data.radioName}</div>
-          <div className="text-xs opacity-70">RADIO ESTACIÓN</div>
+        <div className="text-center flex items-center justify-center space-x-3">
+          {data.logoImage && (
+            <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-current">
+              <img src={data.logoImage} alt={data.radioName} className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div>
+            <div className="font-bold text-lg mb-1">{data.radioName}</div>
+            <div className="text-xs opacity-70">RADIO ESTACIÓN</div>
+          </div>
         </div>
         
         <div className="relative">

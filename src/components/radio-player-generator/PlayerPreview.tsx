@@ -11,9 +11,21 @@ interface PlayerPreviewProps {
   showVolume?: boolean;
   showProgress?: boolean;
   description?: string;
+  backgroundImage?: string;
+  logoImage?: string;
 }
 
-export const PlayerPreview = ({ style, radioName, layout, showVisualizer, showVolume, showProgress, description }: PlayerPreviewProps) => {
+export const PlayerPreview = ({ 
+  style, 
+  radioName, 
+  layout, 
+  showVisualizer, 
+  showVolume, 
+  showProgress, 
+  description,
+  backgroundImage,
+  logoImage
+}: PlayerPreviewProps) => {
   const data: FormData = { 
     style: style as any, 
     radioName, 
@@ -21,7 +33,9 @@ export const PlayerPreview = ({ style, radioName, layout, showVisualizer, showVo
     showVisualizer, 
     showVolume, 
     showProgress, 
-    description 
+    description,
+    backgroundImage,
+    logoImage
   };
   
   if (style.startsWith("luna-")) {

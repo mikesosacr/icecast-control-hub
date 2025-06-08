@@ -15,6 +15,8 @@ export const formSchema = z.object({
   showVolume: z.boolean().optional(),
   showProgress: z.boolean().optional(),
   fontFamily: z.enum(["inter", "roboto", "poppins", "montserrat"]).optional(),
+  backgroundImage: z.string().optional(),
+  logoImage: z.string().optional(),
 });
 
 export type FormData = z.infer<typeof formSchema>;
@@ -54,4 +56,6 @@ export interface GeneratedPlayer {
   primaryColor?: string;
   secondaryColor?: string;
   fontFamily?: string;
+  backgroundImage?: string;
+  logoImage?: string;
 }

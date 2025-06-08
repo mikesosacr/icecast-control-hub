@@ -32,6 +32,8 @@ const AIRadioPlayerGenerator = () => {
       showVolume: true,
       showProgress: true,
       fontFamily: "inter",
+      backgroundImage: "",
+      logoImage: "",
     },
   });
 
@@ -54,6 +56,8 @@ const AIRadioPlayerGenerator = () => {
         showVolume: data.showVolume,
         showProgress: data.showProgress,
         fontFamily: data.fontFamily,
+        backgroundImage: data.backgroundImage,
+        logoImage: data.logoImage,
       };
 
       const enhancedCode = generatePlayerCode(data);
@@ -83,6 +87,9 @@ const AIRadioPlayerGenerator = () => {
     toast.success("Reproductor exportado como archivo");
   };
 
+  // Watch all the form values for real-time preview updates
+  const watchedValues = form.watch();
+
   return (
     <>
       <PageHeader 
@@ -106,13 +113,15 @@ const AIRadioPlayerGenerator = () => {
             </h3>
             <div className="flex justify-center">
               <PlayerPreview 
-                style={form.watch("style")} 
-                radioName={form.watch("radioName") || "Mi Radio"} 
-                layout={form.watch("layout")}
-                showVisualizer={form.watch("showVisualizer")}
-                showVolume={form.watch("showVolume")}
-                showProgress={form.watch("showProgress")}
-                description={form.watch("description")}
+                style={watchedValues.style || "minimal"} 
+                radioName={watchedValues.radioName || "Mi Radio"} 
+                layout={watchedValues.layout || "horizontal"}
+                showVisualizer={watchedValues.showVisualizer}
+                showVolume={watchedValues.showVolume}
+                showProgress={watchedValues.showProgress}
+                description={watchedValues.description}
+                backgroundImage={watchedValues.backgroundImage}
+                logoImage={watchedValues.logoImage}
               />
             </div>
           </div>

@@ -27,12 +27,26 @@ export const LunaPlayer = ({ data }: LunaPlayerProps) => {
     }
   };
 
+  const containerStyle = data.backgroundImage ? {
+    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url(${data.backgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat'
+  } : {};
+
   return (
-    <div className={`p-6 rounded-2xl ${getLunaStyles()} w-full max-w-md mx-auto`}>
+    <div 
+      className={`p-6 rounded-2xl ${getLunaStyles()} w-full max-w-md mx-auto relative`}
+      style={containerStyle}
+    >
       {/* Album Art & Info */}
       <div className="text-center mb-6">
-        <div className="w-48 h-48 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center">
-          <Music size={64} className="opacity-60" />
+        <div className="w-48 h-48 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center overflow-hidden">
+          {data.logoImage ? (
+            <img src={data.logoImage} alt={data.radioName} className="w-full h-full object-cover" />
+          ) : (
+            <Music size={64} className="opacity-60" />
+          )}
         </div>
         <h3 className="text-xl font-bold mb-1 truncate">{data.radioName}</h3>
         {data.description && <p className="text-sm opacity-80 mb-2">{data.description}</p>}
