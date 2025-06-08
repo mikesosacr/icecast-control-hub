@@ -12,18 +12,33 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useServers, useServerMutations } from "@/hooks/useIcecastApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useNavigate } from "react-router-dom";
+import { AddEditServerModal, ServerFormData } from "@/components/servers/AddEditServerModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const RemoteServers = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingServer, setEditingServer] = useState<IcecastServer | null>(null);
+  const [deletingServerId, setDeletingServerId] = useState<string | null>(null);
+  
   const { data: serversResponse, isLoading, error, refetch } = useServers();
-  const { deleteServer } = useServerMutations();
-  const navigate = useNavigate();
+  const { addServer, updateServer, deleteServer, isAdding, isUpdating, isDeleting } = useServerMutations();
 
   const handleEdit = (id: string) => {
     console.log(`Edit server ${id}`);
-    // In a real implementation, this would navigate to an edit form
-    // navigate(`/remote-servers/${id}/edit`);
+    const server = servers.find(s => s.id === id);
+    if (server) {
+      setEditingServer(server);
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -35,8 +50,14 @@ const RemoteServers = () => {
       return;
     }
     
-    // Remove the server using the API
-    deleteServer(id);
+    setDeletingServerId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deletingServerId) {
+      deleteServer(deletingServerId);
+      setDeletingServerId(null);
+    }
   };
 
   const handleRefreshStatus = async () => {
@@ -61,10 +82,25 @@ const RemoteServers = () => {
   const remoteServers = servers.filter(server => !server.isLocal);
 
   const handleAddServer = () => {
-    // In a real implementation, this would navigate to an add server form
-    // navigate('/remote-servers/new');
-    toast.info("Add server functionality will be implemented soon");
+    setShowAddModal(true);
   };
+
+  const handleSubmitServer = (data: ServerFormData) => {
+    if (editingServer) {
+      // Update existing server
+      updateServer({
+        serverId: editingServer.id,
+        server: data
+      });
+      setEditingServer(null);
+    } else {
+      // Add new server
+      addServer(data);
+      setShowAddModal(false);
+    }
+  };
+
+  const isModalLoading = isAdding || isUpdating;
 
   return (
     <>
@@ -207,6 +243,49 @@ const RemoteServers = () => {
           </TabsContent>
         </Tabs>
       )}
+
+      {/* Add/Edit Server Modal */}
+      <AddEditServerModal
+        open={showAddModal || !!editingServer}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowAddModal(false);
+            setEditingServer(null);
+          }
+        }}
+        server={editingServer}
+        onSubmit={handleSubmitServer}
+        isLoading={isModalLoading}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletingServerId} onOpenChange={() => setDeletingServerId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Server</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this server? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
