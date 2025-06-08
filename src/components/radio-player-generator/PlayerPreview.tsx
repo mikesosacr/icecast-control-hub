@@ -65,6 +65,9 @@ export const PlayerPreview = ({
       )}
       <div><span className="font-medium">Color Primario:</span> {primaryColor}</div>
       <div><span className="font-medium">Color Secundario:</span> {secondaryColor}</div>
+      <div><span className="font-medium">Visualizador:</span> {showVisualizer ? "Sí" : "No"}</div>
+      <div><span className="font-medium">Volumen:</span> {showVolume ? "Sí" : "No"}</div>
+      <div><span className="font-medium">Progreso:</span> {showProgress ? "Sí" : "No"}</div>
     </div>
   );
   
