@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { IcecastServer } from "@/types/icecast";
-import { Plus, Edit, Trash, Globe, Server, RefreshCw } from "lucide-react";
+import { Plus, Edit, Trash, Globe, Server, RefreshCw, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -94,8 +94,16 @@ const RemoteServers = () => {
       });
       setEditingServer(null);
     } else {
-      // Add new server
-      addServer(data);
+      // Add new server - ensure all required fields are present
+      const serverData: Omit<IcecastServer, 'id' | 'status'> = {
+        name: data.name,
+        host: data.host,
+        port: data.port,
+        adminUsername: data.adminUsername,
+        adminPassword: data.adminPassword,
+        isLocal: data.isLocal
+      };
+      addServer(serverData);
       setShowAddModal(false);
     }
   };

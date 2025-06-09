@@ -4,15 +4,6 @@ import * as api from '@/services/api';
 import { handleApiSuccess, queryClient } from './useApiBase';
 import { ServerStatus } from '@/types/icecast';
 
-// Server status
-export function useServerStatus(serverId = 'local') {
-  return useQuery({
-    queryKey: ['serverStatus', serverId],
-    queryFn: () => api.getServerStatus(serverId),
-    refetchInterval: 10000, // Refresh every 10 seconds
-  });
-}
-
 // Server statistics
 export function useServerStats(serverId = 'local') {
   return useQuery({
@@ -29,7 +20,7 @@ export function useServerControl() {
   const startMutation = useMutation({
     mutationFn: (serverId: string = 'local') => api.startServer(serverId),
     onSuccess: (data, serverId) => {
-      queryClient.invalidateQueries({ queryKey: ['serverStatus', serverId] });
+      queryClient.invalidateQueries({ queryKey: ['serverStats', serverId] });
       handleApiSuccess('Server started successfully');
     },
     onError: (error) => {
@@ -40,7 +31,7 @@ export function useServerControl() {
   const stopMutation = useMutation({
     mutationFn: (serverId: string = 'local') => api.stopServer(serverId),
     onSuccess: (data, serverId) => {
-      queryClient.invalidateQueries({ queryKey: ['serverStatus', serverId] });
+      queryClient.invalidateQueries({ queryKey: ['serverStats', serverId] });
       handleApiSuccess('Server stopped successfully');
     },
     onError: (error) => {
@@ -51,7 +42,7 @@ export function useServerControl() {
   const restartMutation = useMutation({
     mutationFn: (serverId: string = 'local') => api.restartServer(serverId),
     onSuccess: (data, serverId) => {
-      queryClient.invalidateQueries({ queryKey: ['serverStatus', serverId] });
+      queryClient.invalidateQueries({ queryKey: ['serverStats', serverId] });
       handleApiSuccess('Server restarted successfully');
     },
     onError: (error) => {
@@ -62,7 +53,7 @@ export function useServerControl() {
   return {
     startServer: startMutation.mutate,
     stopServer: stopMutation.mutate,
-    restartServer: restartMutation.mutate,
+    restartServer: restMutation.mutate,
     isStarting: startMutation.isPending,
     isStopping: stopMutation.isPending,
     isRestarting: restartMutation.isPending,
