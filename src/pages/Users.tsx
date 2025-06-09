@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { useUsers, useUserMutations } from "@/hooks/useIcecastApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CreateUserModal } from "@/components/users/CreateUserModal";
 
 const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: usersResponse, isLoading, error } = useUsers();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const { data: usersResponse, isLoading, error, refetch } = useUsers();
   const { deleteUser } = useUserMutations();
 
   const handleEdit = (id: string) => {
@@ -22,6 +24,10 @@ const Users = () => {
 
   const handleDelete = (id: string) => {
     deleteUser({ userId: id });
+  };
+
+  const handleUserCreated = () => {
+    refetch();
   };
 
   const users = usersResponse?.success ? usersResponse.data || [] : [];
@@ -36,7 +42,7 @@ const Users = () => {
         heading="User Management" 
         text="Manage admin and streamer accounts"
       >
-        <Button>
+        <Button onClick={() => setShowCreateModal(true)}>
           <Plus className="mr-1 h-4 w-4" />
           <span>New User</span>
         </Button>
@@ -123,6 +129,12 @@ const Users = () => {
           )}
         </CardContent>
       </Card>
+
+      <CreateUserModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onUserCreated={handleUserCreated}
+      />
     </>
   );
 };

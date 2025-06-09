@@ -1,17 +1,9 @@
 
 import { toast } from "sonner";
 
-/**
- * Provides integration with the built-in Icecast2 server
- */
 export const icecastService = {
-  /**
-   * Check if the built-in Icecast server is available
-   */
   async checkServerAvailability(): Promise<boolean> {
     try {
-      // In a real implementation, this would check if the server binary exists
-      // and if the service can be accessed
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/server-health`);
       return response.ok;
     } catch (error) {
@@ -20,9 +12,6 @@ export const icecastService = {
     }
   },
 
-  /**
-   * Install Icecast2 as a built-in service
-   */
   async installBuiltInServer(options: { 
     serverPort: number, 
     adminUser: string, 
@@ -34,18 +23,24 @@ export const icecastService = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(options),
+        body: JSON.stringify({
+          port: options.serverPort,
+          adminUsername: options.adminUser,
+          adminPassword: options.adminPassword,
+          autoStart: true,
+        }),
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
       
       const result = await response.json();
       
-      if (!response.ok) {
-        throw new Error(result.message || 'Installation failed');
-      }
-      
       return { 
         success: true, 
-        message: 'Icecast server installed successfully' 
+        message: result.message || 'Icecast server installed and configured successfully' 
       };
     } catch (error) {
       console.error("Error installing built-in server:", error);
@@ -56,14 +51,12 @@ export const icecastService = {
     }
   },
   
-  /**
-   * Get installation status
-   */
   async getInstallationStatus(): Promise<{ 
     installed: boolean; 
     version?: string;
     configPath?: string;
     port?: number;
+    status?: string;
   }> {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/server-status`);
@@ -75,6 +68,35 @@ export const icecastService = {
     } catch (error) {
       console.error("Error checking installation status:", error);
       return { installed: false };
+    }
+  },
+
+  async updateInstallation(): Promise<{ success: boolean, message?: string }> {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/update-installation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      return { 
+        success: true, 
+        message: result.message || 'Installation updated successfully' 
+      };
+    } catch (error) {
+      console.error("Error updating installation:", error);
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Unknown error occurred during update' 
+      };
     }
   }
 };

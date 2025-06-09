@@ -1,4 +1,3 @@
-
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/statistics/StatsCard";
@@ -9,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ResourceUsage } from "@/components/dashboard/ResourceUsage";
 import { ServerInfo } from "@/components/dashboard/ServerInfo";
 import { ActiveMountpoints } from "@/components/dashboard/ActiveMountpoints";
+import { AuthButtons } from "@/components/dashboard/AuthButtons";
 import { formatBytes, formatDuration } from "@/utils/formatters";
 
 const Dashboard = () => {
@@ -20,7 +20,6 @@ const Dashboard = () => {
   const mountpoints = mountpointsResponse?.success ? mountpointsResponse.data || [] : [];
 
   const handleEdit = (id: string) => {
-    // Navigate to edit page (to be implemented)
     console.log(`Edit mountpoint ${id}`);
   };
 
@@ -32,7 +31,6 @@ const Dashboard = () => {
     toggleMountpointVisibility({ mountpointId: id, isPublic });
   };
 
-  // Calculate totals
   const totalListeners = mountpoints.reduce(
     (sum, mp) => sum + mp.listeners.current, 0
   );
@@ -46,7 +44,9 @@ const Dashboard = () => {
         <PageHeader 
           heading="Dashboard" 
           text="Overview of your Icecast server status and performance"
-        />
+        >
+          <AuthButtons />
+        </PageHeader>
         <Alert variant="destructive">
           <AlertTitle>Error loading dashboard data</AlertTitle>
           <AlertDescription>
@@ -63,9 +63,12 @@ const Dashboard = () => {
         heading="Dashboard" 
         text="Overview of your Icecast server status and performance"
       >
-        <Button asChild>
-          <Link to="/mountpoints/new">Create Mountpoint</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <AuthButtons />
+          <Button asChild>
+            <Link to="/mountpoints/new">Create Mountpoint</Link>
+          </Button>
+        </div>
       </PageHeader>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
