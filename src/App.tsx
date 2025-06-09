@@ -18,6 +18,7 @@ import Index from '@/pages/Index';
 import NotFound from '@/pages/NotFound';
 import { queryClient } from '@/lib/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 function App() {
   return (
@@ -28,7 +29,11 @@ function App() {
             <Router>
               <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/" element={<DashboardLayout />}>
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <DashboardLayout />
+                  </ProtectedRoute>
+                }>
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/mountpoints" element={<Mountpoints />} />
                   <Route path="/mountpoints/new" element={<NewMountpoint />} />
@@ -38,8 +43,9 @@ function App() {
                   <Route path="/configuration" element={<Configuration />} />
                   <Route path="/server-control" element={<ServerControl />} />
                   <Route path="/remote-servers" element={<RemoteServers />} />
-                  <Route path="/ai-radio-player" element={<AIRadioPlayerGenerator />} />
                 </Route>
+                {/* AI Radio Player Generator is public */}
+                <Route path="/ai-radio-player" element={<AIRadioPlayerGenerator />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Router>

@@ -1,23 +1,32 @@
+
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/button";
 import { StatsCard } from "@/components/statistics/StatsCard";
-import { Activity, Radio, Users, Server } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Activity, Radio, Users, Server, LogOut, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useServerStats, useMountpoints, useMountpointMutations } from "@/hooks/useIcecastApi";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ResourceUsage } from "@/components/dashboard/ResourceUsage";
 import { ServerInfo } from "@/components/dashboard/ServerInfo";
 import { ActiveMountpoints } from "@/components/dashboard/ActiveMountpoints";
-import { AuthButtons } from "@/components/dashboard/AuthButtons";
 import { formatBytes, formatDuration } from "@/utils/formatters";
+import { toast } from "sonner";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { data: statsResponse, isLoading: statsLoading, error: statsError } = useServerStats();
   const { data: mountpointsResponse, isLoading: mountpointsLoading, error: mountpointsError } = useMountpoints();
   const { deleteMountpoint, toggleMountpointVisibility } = useMountpointMutations();
 
   const stats = statsResponse?.success ? statsResponse.data : null;
   const mountpoints = mountpointsResponse?.success ? mountpointsResponse.data || [] : [];
+
+  const handleLogout = () => {
+    localStorage.removeItem('icecast_auth');
+    localStorage.removeItem('icecast_user');
+    toast.success('Sesión cerrada exitosamente');
+    navigate('/');
+  };
 
   const handleEdit = (id: string) => {
     console.log(`Edit mountpoint ${id}`);
@@ -45,7 +54,16 @@ const Dashboard = () => {
           heading="Dashboard" 
           text="Overview of your Icecast server status and performance"
         >
-          <AuthButtons />
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground flex items-center gap-1">
+              <User size={14} />
+              {localStorage.getItem('icecast_user')}
+            </span>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
+              <LogOut size={14} className="mr-1" />
+              Cerrar Sesión
+            </Button>
+          </div>
         </PageHeader>
         <Alert variant="destructive">
           <AlertTitle>Error loading dashboard data</AlertTitle>
@@ -64,7 +82,14 @@ const Dashboard = () => {
         text="Overview of your Icecast server status and performance"
       >
         <div className="flex items-center gap-2">
-          <AuthButtons />
+          <span className="text-sm text-muted-foreground flex items-center gap-1">
+            <User size={14} />
+            {localStorage.getItem('icecast_user')}
+          </span>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            <LogOut size={14} className="mr-1" />
+            Cerrar Sesión
+          </Button>
           <Button asChild>
             <Link to="/mountpoints/new">Create Mountpoint</Link>
           </Button>
