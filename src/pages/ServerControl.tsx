@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -7,17 +8,16 @@ import { RefreshCw, Server, AlertTriangle } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { useServerStats, useServerStatus, useServerControl } from "@/hooks/useIcecastApi";
+import { useServerStats, useServerControl } from "@/hooks/useIcecastApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const ServerControl = () => {
-  const { data: statusData, isLoading: statusLoading, error: statusError, refetch: refetchStatus } = useServerStatus();
-  const { data: statsData, isLoading: statsLoading, error: statsError } = useServerStats();
+  const { data: statsData, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useServerStats();
   const { startServer, stopServer, restartServer, isStarting, isStopping, isRestarting } = useServerControl();
 
-  const serverStatus = statusData?.success ? statusData.data?.status : 'stopped';
   const serverStats = statsData?.success ? statsData.data : undefined;
+  const serverStatus = serverStats ? 'running' : 'stopped';
   
   const formatUptime = (seconds: number): string => {
     if (!seconds) return "N/A";
@@ -37,26 +37,26 @@ const ServerControl = () => {
   const handleRestart = async () => {
     restartServer('local');
     setTimeout(() => {
-      refetchStatus();
+      refetchStats();
     }, 3000);
   };
 
   const handleStop = async () => {
     stopServer('local');
     setTimeout(() => {
-      refetchStatus();
+      refetchStats();
     }, 2000);
   };
 
   const handleStart = async () => {
     startServer('local');
     setTimeout(() => {
-      refetchStatus();
+      refetchStats();
     }, 2000);
   };
 
-  const isLoading = statusLoading || statsLoading;
-  const error = statusError || statsError;
+  const isLoading = statsLoading;
+  const error = statsError;
 
   if (error) {
     return (

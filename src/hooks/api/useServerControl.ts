@@ -53,7 +53,7 @@ export function useServerControl() {
   return {
     startServer: startMutation.mutate,
     stopServer: stopMutation.mutate,
-    restartServer: restMutation.mutate,
+    restartServer: restartMutation.mutate,
     isStarting: startMutation.isPending,
     isStopping: stopMutation.isPending,
     isRestarting: restartMutation.isPending,
