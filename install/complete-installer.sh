@@ -1,360 +1,213 @@
 #!/bin/bash
+# install.sh - Instalador y gestor para icecast-control-hub en VPS Ubuntu
+# Requiere: sudo
+
 set -e
 
-# Colores
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-NC='\033[0m'
+REPO_URL="https://github.com/mikesosacr/icecast-control-hub.git"
+APP_DIR="/opt/icecast-control-hub"
+ENV_FILE="$APP_DIR/.env"
+ICECAST_CONFIG="/etc/icecast.xml"
+ICECAST_SERVICE="icecast-kh"
+SYSTEMD_SERVICE="/etc/systemd/system/icecast-control-hub.service"
 
-echo -e "${BLUE}================================================================${NC}"
-echo -e "${BLUE}    Icecast2 Admin Panel - Instalador Completo Ubuntu          ${NC}"
-echo -e "${BLUE}================================================================${NC}"
+function check_root() {
+  if [ "$(id -u)" -ne 0 ]; then
+    echo "Este script requiere permisos de sudo. Ejecuta: sudo ./install.sh"
+    exit 1
+  fi
+}
 
-# Verificar ejecución como root
-if [ "$EUID" -ne 0 ]; then
-  echo -e "${RED}❌ Por favor ejecutar como root o con sudo.${NC}"
-  exit 1
+function install_dependencies() {
+  echo "Actualizando repositorios e instalando dependencias..."
+  apt update
+  apt install -y icecast-kh nodejs npm sqlite3 git
+  NODE_VER=$(node -v)
+  echo "Node.js instalado: $NODE_VER"
+}
+
+function clone_or_update_repo() {
+  if [ -d "$APP_DIR" ]; then
+    echo "Actualizando repo existente..."
+    cd "$APP_DIR"
+    git pull
+  else
+    echo "Clonando repo en $APP_DIR..."
+    git clone "$REPO_URL" "$APP_DIR"
+  fi
+}
+
+function create_env() {
+  echo "Configurando archivo .env..."
+  read -p "Usuario admin para Icecast y Dashboard: " ADMIN_USER
+  read -sp "Contraseña para admin: " ADMIN_PASS
+  echo
+  read -p "Puerto para Icecast (default 8000): " ICECAST_PORT
+  ICECAST_PORT=${ICECAST_PORT:-8000}
+
+  cat > "$ENV_FILE" << EOF
+ADMIN_USER=$ADMIN_USER
+ADMIN_PASS=$ADMIN_PASS
+ICECAST_PORT=$ICECAST_PORT
+EOF
+  echo ".env creado."
+}
+
+function configure_icecast() {
+  echo "Configurando Icecast-KH..."
+  # Backup config
+  cp "$ICECAST_CONFIG" "$ICECAST_CONFIG.bak.$(date +%F-%T)"
+
+  # Editar puerto y credenciales básicas en icecast.xml
+  sed -i "s/<port>.*<\/port>/<port>$ICECAST_PORT<\/port>/" "$ICECAST_CONFIG"
+  sed -i "s|<username>.*</username>|<username>$ADMIN_USER</username>|" "$ICECAST_CONFIG"
+  sed -i "s|<password>.*</password>|<password>$ADMIN_PASS</password>|" "$ICECAST_CONFIG"
+
+  systemctl restart "$ICECAST_SERVICE"
+  echo "Icecast-KH configurado y reiniciado."
+}
+
+function setup_database() {
+  echo "Configurando base de datos SQLite..."
+  cd "$APP_DIR"
+  if [ ! -f database.sqlite ]; then
+    sqlite3 database.sqlite <<EOF
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  role TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS mountpoints (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT UNIQUE NOT NULL,
+  description TEXT
+);
+
+INSERT OR IGNORE INTO users (username, password, role) VALUES ('$ADMIN_USER', '$ADMIN_PASS', 'admin');
+EOF
+    echo "Base de datos creada con usuario admin."
+  else
+    echo "Base de datos ya existe, saltando creación."
+  fi
+}
+
+function install_backend_frontend() {
+  echo "Instalando backend y frontend..."
+  cd "$APP_DIR"
+  npm install
+
+  if [ -f package.json ] && grep -q "\"build\"" package.json; then
+    echo "Compilando frontend..."
+    npm run build || echo "No se pudo construir frontend, verifica scripts."
+  fi
+}
+
+function create_systemd_service() {
+  echo "Creando servicio systemd para backend..."
+
+  cat > "$SYSTEMD_SERVICE" << EOF
+[Unit]
+Description=Icecast Control Hub Backend
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=$APP_DIR
+ExecStart=/usr/bin/node $APP_DIR/server.js
+Restart=on-failure
+User=root
+EnvironmentFile=$ENV_FILE
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  systemctl daemon-reload
+  systemctl enable icecast-control-hub.service
+  systemctl restart icecast-control-hub.service
+  echo "Servicio systemd creado, habilitado y en ejecución."
+}
+
+function update_admin_credentials() {
+  echo "Cambiar usuario/contraseña admin..."
+  read -p "Nuevo usuario admin: " NEW_USER
+  read -sp "Nueva contraseña: " NEW_PASS
+  echo
+  # Actualizar env
+  sed -i "s/^ADMIN_USER=.*/ADMIN_USER=$NEW_USER/" "$ENV_FILE"
+  sed -i "s/^ADMIN_PASS=.*/ADMIN_PASS=$NEW_PASS/" "$ENV_FILE"
+  # Actualizar icecast config
+  sed -i "s|<username>.*</username>|<username>$NEW_USER</username>|" "$ICECAST_CONFIG"
+  sed -i "s|<password>.*</password>|<password>$NEW_PASS</password>|" "$ICECAST_CONFIG"
+  # Actualizar DB
+  cd "$APP_DIR"
+  sqlite3 database.sqlite "UPDATE users SET username='$NEW_USER', password='$NEW_PASS' WHERE role='admin';"
+  systemctl restart "$ICECAST_SERVICE"
+  systemctl restart icecast-control-hub.service
+  echo "Usuario y contraseña actualizados."
+}
+
+function change_icecast_port() {
+  echo "Cambiar puerto Icecast..."
+  read -p "Nuevo puerto: " NEW_PORT
+  sed -i "s/^ICECAST_PORT=.*/ICECAST_PORT=$NEW_PORT/" "$ENV_FILE"
+  sed -i "s/<port>.*<\/port>/<port>$NEW_PORT<\/port>/" "$ICECAST_CONFIG"
+  systemctl restart "$ICECAST_SERVICE"
+  echo "Puerto cambiado y servidor reiniciado."
+}
+
+function main_menu() {
+  echo
+  echo "=== Menú principal ==="
+  echo "1) Reinstalar todo (pierde configuraciones previas)"
+  echo "2) Cambiar usuario/contraseña admin"
+  echo "3) Cambiar puerto Icecast"
+  echo "4) Salir"
+  read -p "Selecciona opción: " option
+
+  case $option in
+    1)
+      echo "Reinstalando..."
+      create_env
+      configure_icecast
+      setup_database
+      install_backend_frontend
+      create_systemd_service
+      ;;
+    2)
+      update_admin_credentials
+      ;;
+    3)
+      change_icecast_port
+      ;;
+    4)
+      echo "Saliendo..."
+      exit 0
+      ;;
+    *)
+      echo "Opción inválida."
+      main_menu
+      ;;
+  esac
+}
+
+# --- Comienzo del script ---
+check_root
+install_dependencies
+clone_or_update_repo
+
+if [ ! -f "$ENV_FILE" ]; then
+  echo "Primera instalación detectada."
+  create_env
+  configure_icecast
+  setup_database
+  install_backend_frontend
+  create_systemd_service
+else
+  echo "Instalación previa detectada."
+  main_menu
 fi
 
-# Crear log file
-LOGFILE="/var/log/icecast-admin-install.log"
-touch $LOGFILE
-echo "Instalación iniciada: $(date)" > $LOGFILE
-exec > >(tee -a $LOGFILE)
-exec 2>&1
-echo -e "${GREEN}Log de instalación: ${LOGFILE}${NC}"
-
-# Obtener IP pública confiable
-SERVER_IP=$(curl -s https://api.ipify.org  || hostname -I | tr ' ' '\n' | grep -vE '^(10\.|172\.1[6-9]\.|172\.2[0-9]\.|172\.3[0-1]\.|192\.168\.|127\.)' | head -n1)
-if [[ "$SERVER_IP" =~ ^(10\.|172\.|192\.168\.) ]]; then
-    SERVER_IP="localhost"
-fi
-echo -e "${GREEN}🔧 IP del servidor detectada: ${SERVER_IP}${NC}"
-
-# Directorio base
-APP_DIR="/opt/icecast-admin"
-
-# Credenciales predeterminadas
-ICECAST_PORT=8000
-ICECAST_ADMIN_USER="admin"
-ICECAST_ADMIN_PASS=""
-ICECAST_SOURCE_PASS="hackme"
-
-FRONTEND_REPO="https://github.com/mikesosacr/icecast-control-hub.git" 
-FRONTEND_BRANCH="main"
-
-# Función para detectar instalación existente de Icecast2
-detect_icecast() {
-    echo -e "${BLUE}🔍 Detectando instalación existente de Icecast2...${NC}"
-    ICECAST_INSTALLED=false
-    ICECAST_CONFIG_PATH=""
-    if command -v icecast2 &> /dev/null; then
-        ICECAST_INSTALLED=true
-        echo -e "${GREEN}✓ Icecast2 encontrado en el sistema${NC}"
-        for config_path in "/etc/icecast2/icecast.xml" "/etc/icecast/icecast.xml" "/usr/local/etc/icecast.xml"; do
-            if [ -f "$config_path" ]; then
-                ICECAST_CONFIG_PATH="$config_path"
-                echo -e "${GREEN}✓ Configuración encontrada: ${config_path}${NC}"
-                break
-            fi
-        done
-        if [ -n "$ICECAST_CONFIG_PATH" ] && [ -f "$ICECAST_CONFIG_PATH" ]; then
-            PORT_MATCH=$(grep -o '<port>[0-9]*</port>' "$ICECAST_CONFIG_PATH" | head -1 | grep -o '[0-9]*')
-            if [ -n "$PORT_MATCH" ]; then
-                ICECAST_PORT=$PORT_MATCH
-            fi
-            ADMIN_USER_MATCH=$(grep -o '<admin-user>[^<]*</admin-user>' "$ICECAST_CONFIG_PATH" | head -1 | sed 's/<[^>]*>//g')
-            if [ -n "$ADMIN_USER_MATCH" ]; then
-                ICECAST_ADMIN_USER="$ADMIN_USER_MATCH"
-            fi
-            ADMIN_PASS_MATCH=$(grep -o '<admin-password>[^<]*</admin-password>' "$ICECAST_CONFIG_PATH" | head -1 | sed 's/<[^>]*>//g')
-            if [ -n "$ADMIN_PASS_MATCH" ]; then
-                ICECAST_ADMIN_PASS="$ADMIN_PASS_MATCH"
-            fi
-            SOURCE_PASS_MATCH=$(grep -o '<source-password>[^<]*</source-password>' "$ICECAST_CONFIG_PATH" | head -1 | sed 's/<[^>]*>//g')
-            if [ -n "$SOURCE_PASS_MATCH" ]; then
-                ICECAST_SOURCE_PASS="$SOURCE_PASS_MATCH"
-            fi
-            echo -e "${GREEN}✓ Puerto detectado: ${ICECAST_PORT}${NC}"
-            echo -e "${GREEN}✓ Usuario admin detectado: ${ICECAST_ADMIN_USER:-"(no configurado)"}${NC}"
-        fi
-    else
-        echo -e "${YELLOW}⚠️ Icecast2 no encontrado, se instalará automáticamente${NC}"
-    fi
-}
-
-# Función para configurar credenciales
-configure_credentials() {
-    echo -e "${BLUE}🔐 Configurando credenciales de administración...${NC}"
-    if [ -n "$ICECAST_ADMIN_USER" ] && [ -n "$ICECAST_ADMIN_PASS" ]; then
-        echo -e "${GREEN}Usando credenciales existentes:${NC}"
-        echo -e "Usuario: ${ICECAST_ADMIN_USER}"
-        echo -e "Contraseña: ${ICECAST_ADMIN_PASS}"
-        echo -e "${YELLOW}¿Desea mantener estas credenciales? (s/n)${NC}"
-        read -r keep_creds
-        if [[ ! $keep_creds =~ ^[Ss]$ ]]; then
-            configure_new_credentials
-        fi
-    else
-        echo -e "${YELLOW}No se encontraron credenciales existentes${NC}"
-        configure_new_credentials
-    fi
-}
-
-# Función para nuevas credenciales
-configure_new_credentials() {
-    echo -e "${BLUE}🔑 Configurando nuevas credenciales...${NC}"
-    echo -e "${YELLOW}Ingrese el usuario administrador (default: admin):${NC}"
-    read -r new_admin_user
-    ICECAST_ADMIN_USER=${new_admin_user:-"admin"}
-    echo -e "${YELLOW}Ingrese la contraseña de administrador:${NC}"
-    read -s new_admin_pass
-    echo
-    if [ -z "$new_admin_pass" ]; then
-        echo -e "${YELLOW}Generando contraseña automática...${NC}"
-        ICECAST_ADMIN_PASS=$(openssl rand -base64 12)
-        echo -e "${GREEN}✅ Contraseña generada: ${ICECAST_ADMIN_PASS}${NC}"
-    else
-        ICECAST_ADMIN_PASS="$new_admin_pass"
-    fi
-    if [ -z "$ICECAST_SOURCE_PASS" ]; then
-        echo -e "${YELLOW}Ingrese la contraseña de source (default: hackme):${NC}"
-        read -s new_source_pass
-        echo
-        ICECAST_SOURCE_PASS=${new_source_pass:-"hackme"}
-    fi
-}
-
-# Función para instalar dependencias
-install_dependencies() {
-    echo -e "${BLUE}📦 Instalando dependencias del sistema...${NC}"
-    apt update -y
-    apt install -y curl wget gnupg ca-certificates lsb-release nginx supervisor git
-    # Instalar Node.js si no está presente
-    if ! command -v node &> /dev/null; then
-        echo -e "${BLUE}🌐 Instalando Node.js v18...${NC}"
-        curl -fsSL https://deb.nodesource.com/setup_18.x  | bash -
-        apt install -y nodejs
-    else
-        echo -e "${GREEN}✓ Node.js ya está instalado${NC}"
-    fi
-    # Instalar Icecast2 si no está presente
-    if [ "$ICECAST_INSTALLED" = false ]; then
-        echo -e "${BLUE}🔊 Instalando Icecast2...${NC}"
-        apt install -y icecast2
-        ICECAST_CONFIG_PATH="/etc/icecast2/icecast.xml"
-    fi
-}
-
-# Función para configurar aplicación
-setup_application() {
-    echo -e "${BLUE}⚙️ Configurando aplicación del panel...${NC}"
-    mkdir -p "$APP_DIR/dist" "$APP_DIR/api"
-
-    # Setup environment file
-    cat > "$APP_DIR/.env" << EOF
-# API Configuration
-VITE_API_BASE_URL=http://${SERVER_IP}:3000/api
-ICECAST_CONFIG_PATH=${ICECAST_CONFIG_PATH}
-ICECAST_ADMIN_USERNAME=${ICECAST_ADMIN_USER}
-ICECAST_ADMIN_PASSWORD=${ICECAST_ADMIN_PASS}
-ICECAST_PORT=${ICECAST_PORT}
-PORT=3000
-EOF
-
-    # Crear package.json básico
-    cat > "$APP_DIR/package.json" << EOF
-{
-  "name": "icecast-admin",
-  "version": "1.0.0",
-  "description": "Panel de administración para Icecast2",
-  "main": "api/server.js",
-  "scripts": {
-    "start": "node api/server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "xml2js": "^0.6.2",
-    "fs-extra": "^11.1.1",
-    "basic-auth": "^2.0.1",
-    "dotenv": "^16.3.1"
-  }
-}
-EOF
-
-    # Crear servidor Express básico
-    cat > "$APP_DIR/api/server.js" << 'EOF'
-const express = require('express');
-const cors = require('cors');
-const fs = require('fs-extra');
-const { exec } = require('child_process');
-const xml2js = require('xml2js');
-const path = require('path');
-const basicAuth = require('basic-auth');
-require('dotenv').config();
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-const ICECAST_CONFIG_PATH = process.env.ICECAST_CONFIG_PATH || '/etc/icecast2/icecast.xml';
-
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, '../dist')));
-
-// Middleware de autenticación básica
-const auth = (req, res, next) => {
-  const user = basicAuth(req);
-  if (!user || user.name !== process.env.ICECAST_ADMIN_USERNAME || user.pass !== process.env.ICECAST_ADMIN_PASSWORD) {
-    res.set('WWW-Authenticate', 'Basic realm="Icecast Panel API"');
-    return res.status(401).send('Authentication required');
-  }
-  return next();
-};
-
-// Rutas públicas
-app.get('/api/server-health', (req, res) => {
-  exec('command -v icecast2', (error) => {
-    if (error) {
-      return res.status(404).json({ available: false, message: 'Icecast2 no está instalado' });
-    }
-    exec('systemctl is-active icecast2', (error, stdout) => {
-      const status = stdout.trim() === 'active' ? 'running' : 'stopped';
-      res.json({ available: true, status, configPath: ICECAST_CONFIG_PATH });
-    });
-  });
-});
-
-// Rutas protegidas
-app.use(auth);
-
-// Servir frontend
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto \${PORT}`);
-});
-EOF
-
-    # Clonar tu repo frontend
-    FRONTEND_DIR="$APP_DIR/frontend"
-    echo -e "${BLUE}📁 Clonando tu frontend desde GitHub...${NC}"
-    rm -rf "$FRONTEND_DIR"
-    git clone -b "$FRONTEND_BRANCH" "$FRONTEND_REPO" "$FRONTEND_DIR"
-    cd "$FRONTEND_DIR"
-    echo -e "${BLUE}🧱 Instalando dependencias del frontend...${NC}"
-    npm install
-    echo -e "${BLUE}🛠️ Construyendo el frontend...${NC}"
-    npm run build
-    cp -r dist/* "$APP_DIR/dist/" || cp -r dist/. "$APP_DIR/dist/"
-
-    echo -e "${BLUE}💾 Instalando dependencias del backend...${NC}"
-    cd "$APP_DIR" && npm install
-}
-
-# Función para configurar servicios
-setup_services() {
-    echo -e "${BLUE}🔁 Configurando servicios...${NC}"
-
-    # Supervisor
-    cat > /etc/supervisor/conf.d/icecast-admin.conf << EOF
-[program:icecast-admin]
-directory=${APP_DIR}
-command=node api/server.js
-autostart=true
-autorestart=true
-user=root
-environment=NODE_ENV=production
-stdout_logfile=/var/log/icecast-admin.log
-stderr_logfile=/var/log/icecast-admin-error.log
-EOF
-
-    supervisorctl reread
-    supervisorctl update
-    supervisorctl start icecast-admin
-
-    # Nginx
-    cat > /etc/nginx/sites-available/icecast-admin << EOF
-server {
-    listen 80;
-    server_name _;
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade \$http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host \$host;
-        proxy_cache_bypass \$http_upgrade;
-    }
-}
-EOF
-
-    ln -sf /etc/nginx/sites-available/icecast-admin /etc/nginx/sites-enabled/
-    rm -f /etc/nginx/sites-enabled/default || true
-    systemctl restart nginx
-    systemctl enable nginx
-}
-
-# Función para reiniciar servicios si fallan
-repair_services() {
-    echo -e "${BLUE}🔄 Reparando servicios críticos...${NC}"
-    systemctl daemon-reexec || true
-
-    # Reiniciar o reparar Supervisor
-    if ! systemctl is-active supervisor &>/dev/null; then
-        echo -e "${YELLOW}⚠️ Supervisor no activo. Reinstalando...${NC}"
-        apt purge --auto-remove supervisor -y
-        apt install -y supervisor
-        systemctl enable supervisor
-    fi
-    systemctl start supervisor
-    supervisorctl update
-
-    # Reiniciar Nginx si hay problemas
-    if ! systemctl is-active nginx &>/dev/null; then
-        echo -e "${YELLOW}⚠️ Nginx no activo. Reiniciando...${NC}"
-        systemctl start nginx
-    fi
-}
-
-# Función para crear archivo de info final
-create_info_file() {
-    cat > "$APP_DIR/INFO.md" << EOF
-# Información del Panel Icecast2
-
-- **URL del Panel**: http://${SERVER_IP}
-- **API**: http://${SERVER_IP}:3000/api
-- **Admin Icecast**: http://${SERVER_IP}:${ICECAST_PORT}/admin/
-- **Usuario Admin**: ${ICECAST_ADMIN_USER}
-- **Contraseña Admin**: ${ICECAST_ADMIN_PASS}
-- **Contraseña Source**: ${ICECAST_SOURCE_PASS}
-- **Puerto Icecast**: ${ICECAST_PORT}
-- **Mountpoint Ejemplo**: /stream
-EOF
-    echo -e "${GREEN}📄 Info guardada en: ${APP_DIR}/INFO.md${NC}"
-}
-
-# Función principal
-main() {
-    echo -e "${GREEN}🚀 Iniciando instalación completa...${NC}"
-    detect_icecast
-    configure_credentials
-    install_dependencies
-    setup_application
-    repair_services
-    setup_services
-    create_info_file
-
-    echo -e "${GREEN}✅ ¡INSTALACIÓN COMPLETADA!${NC}"
-    echo -e "${GREEN}🌐 Panel accesible en: http://${SERVER_IP}${NC}"
-    echo -e "${GREEN}🌐 Admin Icecast: http://${SERVER_IP}:${ICECAST_PORT}/admin/${NC}"
-    echo -e "${GREEN}🔐 Usuario Admin: ${ICECAST_ADMIN_USER}${NC}"
-    echo -e "${GREEN}🔐 Contraseña Admin: ${ICECAST_ADMIN_PASS}${NC}"
-    echo -e "${GREEN}📄 Info adicional en: ${APP_DIR}/INFO.md${NC}"
-}
-
-main
+echo "Proceso finalizado."
