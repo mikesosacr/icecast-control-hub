@@ -5,9 +5,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   Sidebar,
   SidebarFooter
 } from "@/components/ui/sidebar";
@@ -20,84 +17,47 @@ import {
   FileText, 
   Settings,
   RefreshCw, 
-  Server, 
   Globe
 } from "lucide-react";
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useServerStats } from "@/hooks/useIcecastApi";
 
 export function AppSidebar() {
   const location = useLocation();
-  const [serverStatus, setServerStatus] = useState<'online' | 'offline' | 'warning'>('online');
+  const { data: statsData } = useServerStats();
+  
+  const serverStatus = statsData?.success ? 'online' : 'offline';
   
   const navigationItems = [
-    {
-      title: "Dashboard",
-      path: "/dashboard",
-      icon: Home,
-    },
-    {
-      title: "Mountpoints",
-      path: "/mountpoints",
-      icon: Radio,
-    },
-    {
-      title: "Users",
-      path: "/users",
-      icon: Users,
-    },
-    {
-      title: "Statistics",
-      path: "/statistics",
-      icon: Activity,
-    },
-    {
-      title: "Logs",
-      path: "/logs",
-      icon: FileText,
-    },
-    {
-      title: "Configuration",
-      path: "/configuration",
-      icon: Settings,
-    },
+    { title: "Dashboard", path: "/dashboard", icon: Home },
+    { title: "Mountpoints", path: "/mountpoints", icon: Radio },
+    { title: "Users", path: "/users", icon: Users },
+    { title: "Statistics", path: "/statistics", icon: Activity },
+    { title: "Logs", path: "/logs", icon: FileText },
+    { title: "Configuration", path: "/configuration", icon: Settings },
   ];
 
   const serverManagementItems = [
-    {
-      title: "Server Control",
-      path: "/server-control",
-      icon: RefreshCw,
-    },
-    {
-      title: "Remote Servers",
-      path: "/remote-servers", 
-      icon: Globe,
-    },
+    { title: "Server Control", path: "/server-control", icon: RefreshCw },
+    { title: "Remote Servers", path: "/remote-servers", icon: Globe },
   ];
 
-  const MenuItem = ({ item, isActive }: { item: any, isActive: boolean }) => (
+  const MenuItem = ({ item, isActive }: { item: typeof navigationItems[0], isActive: boolean }) => (
     <Link 
       to={item.path}
       className={cn(
         "flex items-center gap-3 w-full px-3 py-2 rounded-md transition-all duration-200 group",
-        "text-gray-700 hover:bg-gray-800 hover:text-white",
-        isActive && "bg-gray-800 text-white font-medium"
+        "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
       )}
     >
       <item.icon className={cn(
         "h-5 w-5 shrink-0 transition-colors",
-        "text-gray-600 group-hover:text-white",
-        isActive && "text-white"
+        "text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground",
+        isActive && "text-sidebar-accent-foreground"
       )} />
-      <span className={cn(
-        "text-sm font-medium transition-colors",
-        "text-gray-700 group-hover:text-white",
-        isActive && "text-white"
-      )}>
-        {item.title}
-      </span>
+      <span className="text-sm font-medium">{item.title}</span>
     </Link>
   );
 
@@ -105,25 +65,11 @@ export function AppSidebar() {
     <Sidebar variant="sidebar" side="left" collapsible="none">
       <SidebarHeader className="px-6 py-3 flex items-center gap-2">
         <div className="relative h-8 w-8 mr-1">
-          <div className="h-full w-full bg-white rounded-md flex items-center justify-center">
-            <svg 
-              className="h-6 w-6"
-              viewBox="0 0 50 50" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path 
-                d="M25 5C14.5 5 6 13.5 6 24V45H18V24C18 20.1 21.1 17 25 17C28.9 17 32 20.1 32 24V45H44V24C44 13.5 35.5 5 25 5Z" 
-                fill="#0077CC" 
-              />
-              <path 
-                d="M36 28C33.8 28 32 29.8 32 32V45H40V32C40 29.8 38.2 28 36 28Z" 
-                fill="#33A3FF" 
-              />
-              <path 
-                d="M14 28C11.8 28 10 29.8 10 32V45H18V32C18 29.8 16.2 28 14 28Z" 
-                fill="#33A3FF" 
-              />
+          <div className="h-full w-full bg-background rounded-md flex items-center justify-center">
+            <svg className="h-6 w-6" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M25 5C14.5 5 6 13.5 6 24V45H18V24C18 20.1 21.1 17 25 17C28.9 17 32 20.1 32 24V45H44V24C44 13.5 35.5 5 25 5Z" fill="hsl(var(--primary))" />
+              <path d="M36 28C33.8 28 32 29.8 32 32V45H40V32C40 29.8 38.2 28 36 28Z" fill="hsl(var(--primary) / 0.6)" />
+              <path d="M14 28C11.8 28 10 29.8 10 32V45H18V32C18 29.8 16.2 28 14 28Z" fill="hsl(var(--primary) / 0.6)" />
             </svg>
           </div>
         </div>
@@ -139,49 +85,37 @@ export function AppSidebar() {
             <div className="flex items-center gap-2 px-2">
               <div className={cn(
                 "h-2 w-2 rounded-full",
-                serverStatus === "online" && "bg-green-500",
-                serverStatus === "offline" && "bg-red-500",
-                serverStatus === "warning" && "bg-yellow-500"
+                serverStatus === "online" ? "bg-green-500" : "bg-destructive"
               )}/>
-              <span className="text-sidebar-foreground/80 text-sm">
-                Server Status:
-              </span>
-              <Badge variant={serverStatus === "online" ? "default" : serverStatus === "warning" ? "outline" : "destructive"}>
-                {serverStatus === "online" ? "Online" : serverStatus === "warning" ? "Warning" : "Offline"}
+              <span className="text-sidebar-foreground/80 text-sm">Server:</span>
+              <Badge variant={serverStatus === "online" ? "default" : "destructive"}>
+                {serverStatus === "online" ? "Online" : "Offline"}
               </Badge>
             </div>
           </div>
           
-          <SidebarGroupLabel className="text-gray-600 text-xs font-medium px-4 mb-2">
+          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-medium px-4 mb-2">
             Navigation
           </SidebarGroupLabel>
           
           <SidebarGroupContent>
             <div className="space-y-1 px-2">
               {navigationItems.map((item) => (
-                <MenuItem 
-                  key={item.path} 
-                  item={item} 
-                  isActive={location.pathname === item.path} 
-                />
+                <MenuItem key={item.path} item={item} isActive={location.pathname === item.path} />
               ))}
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
         
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-600 text-xs font-medium px-4 mb-2">
+          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-medium px-4 mb-2">
             Server Management
           </SidebarGroupLabel>
           
           <SidebarGroupContent>
             <div className="space-y-1 px-2">
               {serverManagementItems.map((item) => (
-                <MenuItem 
-                  key={item.path} 
-                  item={item} 
-                  isActive={location.pathname === item.path} 
-                />
+                <MenuItem key={item.path} item={item} isActive={location.pathname === item.path} />
               ))}
             </div>
           </SidebarGroupContent>

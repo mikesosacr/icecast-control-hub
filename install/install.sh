@@ -239,7 +239,7 @@ setup_auto_update() {
     
     # Copy update script
     sudo mkdir -p /usr/local/bin
-    sudo cp "$INSTALL_DIR/scripts/update-vps.sh" /usr/local/bin/update-icecast-hub
+    sudo cp "$INSTALL_DIR/install/update.sh" /usr/local/bin/update-icecast-hub
     sudo chmod +x /usr/local/bin/update-icecast-hub
     
     # Create systemd timer for auto-updates (optional)
