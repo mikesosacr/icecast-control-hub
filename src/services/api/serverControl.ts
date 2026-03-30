@@ -2,45 +2,45 @@
 import { fetchApi } from './apiUtils';
 import { ServerStats, ApiResponse } from '@/types/icecast';
 
-export async function getServerStats(serverId: string = 'local'): Promise<ApiResponse<ServerStats>> {
+const getAuthHeaders = (): Record<string, string> => {
   const auth = localStorage.getItem('icecast_auth');
-  return fetchApi<ServerStats>(`/server/stats`, {
-    headers: auth ? { 'Authorization': `Basic ${auth}` } : {},
+  return auth ? { 'Authorization': `Basic ${auth}` } : {};
+};
+
+export async function getServerStats(serverId: string = 'local'): Promise<ApiResponse<ServerStats>> {
+  return fetchApi<ServerStats>(`/servers/${serverId}/stats`, {
+    headers: getAuthHeaders(),
   });
 }
 
 export async function startServer(serverId: string = 'local'): Promise<ApiResponse<void>> {
-  const auth = localStorage.getItem('icecast_auth');
-  return fetchApi<void>(`/server/start`, {
+  return fetchApi<void>(`/servers/${serverId}/start`, {
     method: 'POST',
-    headers: auth ? { 'Authorization': `Basic ${auth}` } : {},
+    headers: getAuthHeaders(),
   });
 }
 
 export async function stopServer(serverId: string = 'local'): Promise<ApiResponse<void>> {
-  const auth = localStorage.getItem('icecast_auth');
-  return fetchApi<void>(`/server/stop`, {
+  return fetchApi<void>(`/servers/${serverId}/stop`, {
     method: 'POST',
-    headers: auth ? { 'Authorization': `Basic ${auth}` } : {},
+    headers: getAuthHeaders(),
   });
 }
 
 export async function restartServer(serverId: string = 'local'): Promise<ApiResponse<void>> {
-  const auth = localStorage.getItem('icecast_auth');
-  return fetchApi<void>(`/server/restart`, {
+  return fetchApi<void>(`/servers/${serverId}/restart`, {
     method: 'POST',
-    headers: auth ? { 'Authorization': `Basic ${auth}` } : {},
+    headers: getAuthHeaders(),
   });
 }
 
 export async function getServerHealth(): Promise<ApiResponse<{ status: string; available: boolean; configPath?: string; port?: number }>> {
-  return fetchApi<{ status: string; available: boolean; configPath?: string; port?: number }>(`/server-health`);
+  return fetchApi<{ status: string; available: boolean; configPath?: string; port?: number }>('/server-health');
 }
 
 export async function installServer(): Promise<ApiResponse<{ message: string; installed: boolean }>> {
-  const auth = localStorage.getItem('icecast_auth');
-  return fetchApi<{ message: string; installed: boolean }>('/server/install', {
+  return fetchApi<{ message: string; installed: boolean }>('/install-server', {
     method: 'POST',
-    headers: auth ? { 'Authorization': `Basic ${auth}` } : {},
+    headers: getAuthHeaders(),
   });
 }
