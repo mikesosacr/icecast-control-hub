@@ -8,9 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { login, isFirstLogin } from "@/services/api/auth";
+import { ChangeCredentialsDialog } from "@/components/auth/ChangeCredentialsDialog";
 
 const Index = () => {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [showChangeCredentials, setShowChangeCredentials] = useState(false);
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,29 +22,39 @@ const Index = () => {
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      const encoded = btoa(`${credentials.username}:${credentials.password}`);
-      
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${encoded}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const result = await login(credentials);
 
-      if (response.ok) {
+      if (result.success) {
+        const encoded = btoa(`${credentials.username}:${credentials.password}`);
         localStorage.setItem('icecast_auth', encoded);
         localStorage.setItem('icecast_user', credentials.username);
         setShowLoginDialog(false);
-        toast.success('Login successful');
-        navigate('/dashboard');
+        toast.success('Inicio de sesión exitoso');
+
+        // Check if using default credentials → prompt to change
+        if (isFirstLogin()) {
+          setShowChangeCredentials(true);
+        } else {
+          navigate('/dashboard');
+        }
       } else {
-        toast.error('Invalid credentials');
+        toast.error(result.error || 'Credenciales inválidas');
       }
-    } catch (error) {
-      toast.error('Connection failed');
+    } catch {
+      toast.error('Error de conexión');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCredentialsChanged = () => {
+    setShowChangeCredentials(false);
+    navigate('/dashboard');
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && credentials.username && credentials.password) {
+      handleLogin();
     }
   };
 
@@ -55,47 +68,45 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Feature Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           <FeatureCard 
             icon={<BarChart2 className="h-8 w-8" />}
             title="Estadísticas en tiempo real"
-            description="Monitorea oyentes, uso del ancho de banda y rendimiento del servidor con estadísticas detalladas."
+            description="Monitorea oyentes, uso del ancho de banda y rendimiento del servidor."
             linkTo="/statistics"
           />
           <FeatureCard 
             icon={<Radio className="h-8 w-8" />}
             title="Gestión de puntos de montaje"
-            description="Administra tus streams fácilmente con controles intuitivos para crear, editar y eliminar puntos de montaje."
+            description="Administra tus streams con controles para crear, editar y eliminar puntos de montaje."
             linkTo="/mountpoints"
           />
           <FeatureCard 
             icon={<Shield className="h-8 w-8" />}
             title="Control de acceso"
-            description="Gestiona usuarios y permisos para mantener tu servidor seguro en todo momento."
+            description="Gestiona usuarios y permisos para mantener tu servidor seguro."
             linkTo="/users"
           />
           <FeatureCard 
             icon={<Settings className="h-8 w-8" />}
             title="Configuración avanzada"
-            description="Personaliza cada aspecto de tu servidor Icecast2 a través de una interfaz amigable."
+            description="Personaliza cada aspecto de tu servidor Icecast2."
             linkTo="/configuration"
           />
           <FeatureCard 
             icon={<Music className="h-8 w-8" />}
             title="Generador de reproductores IA"
-            description="Crea reproductores de audio personalizados para tus radios con diseños llamativos generados por IA."
+            description="Crea reproductores de audio personalizados con diseños generados por IA."
             linkTo="/ai-radio-player"
           />
           <FeatureCard 
             icon={<Layers className="h-8 w-8" />}
             title="Gestión multi-servidor"
-            description="Administra múltiples servidores Icecast2 desde una única interfaz centralizada."
+            description="Administra múltiples servidores Icecast2 desde una única interfaz."
             linkTo="/remote-servers"
           />
         </div>
 
-        {/* Call to action */}
         <div className="text-center space-y-4">
           {isLoggedIn ? (
             <Link to="/dashboard">
@@ -115,13 +126,15 @@ const Index = () => {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[400px]">
                   <DialogHeader>
-                    <DialogTitle>Iniciar Sesión en Icecast Admin</DialogTitle>
+                    <DialogTitle>Iniciar Sesión</DialogTitle>
                     <DialogDescription>
-                      Ingresa tus credenciales de administrador de Icecast para acceder al panel de control
+                      Ingresa tus credenciales para acceder al panel de control.
+                      <br />
+                      <span className="text-xs">Por defecto: <strong>admin</strong> / <strong>admin</strong></span>
                     </DialogDescription>
                   </DialogHeader>
                   
-                  <div className="space-y-4 py-4">
+                  <div className="space-y-4 py-4" onKeyDown={handleKeyDown}>
                     <div className="space-y-2">
                       <Label htmlFor="username">Usuario</Label>
                       <Input
@@ -138,7 +151,7 @@ const Index = () => {
                         type="password"
                         value={credentials.password}
                         onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
-                        placeholder="Ingresa tu contraseña"
+                        placeholder="admin"
                       />
                     </div>
                   </div>
@@ -148,7 +161,7 @@ const Index = () => {
                       Cancelar
                     </Button>
                     <Button onClick={handleLogin} disabled={isLoading || !credentials.username || !credentials.password}>
-                      {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                      {isLoading ? 'Ingresando...' : 'Ingresar'}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -161,12 +174,16 @@ const Index = () => {
           )}
         </div>
       </div>
+
+      <ChangeCredentialsDialog 
+        open={showChangeCredentials} 
+        onComplete={handleCredentialsChanged} 
+      />
     </div>
   );
 };
 
-// Feature card component
-const FeatureCard = ({ icon, title, description, linkTo }) => {
+const FeatureCard = ({ icon, title, description, linkTo }: { icon: React.ReactNode; title: string; description: string; linkTo: string }) => {
   const isLoggedIn = !!localStorage.getItem('icecast_auth');
   
   if (!isLoggedIn && linkTo !== '/ai-radio-player') {
