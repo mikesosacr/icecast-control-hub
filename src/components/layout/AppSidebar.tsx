@@ -94,7 +94,7 @@ export function AppSidebar() {
             </div>
           </div>
           
-          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-medium px-4 mb-2">
+          <SidebarGroupLabel className="text-sidebar-foreground/80 text-xs font-semibold uppercase tracking-wider px-4 mb-2">
             Navigation
           </SidebarGroupLabel>
           
