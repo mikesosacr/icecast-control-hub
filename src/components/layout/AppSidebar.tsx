@@ -123,7 +123,7 @@ export function AppSidebar() {
       </SidebarContent>
       
       <SidebarFooter className="px-6 py-3">
-        <div className="flex items-center justify-between text-sidebar-foreground/60 text-xs">
+        <div className="flex items-center justify-between text-sidebar-foreground/80 text-xs">
           <span>IcecastAdmin v1.0.0</span>
         </div>
       </SidebarFooter>
