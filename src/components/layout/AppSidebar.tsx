@@ -87,7 +87,7 @@ export function AppSidebar() {
                 "h-2 w-2 rounded-full",
                 serverStatus === "online" ? "bg-green-500" : "bg-destructive"
               )}/>
-              <span className="text-sidebar-foreground/80 text-sm">Server:</span>
+              <span className="text-sidebar-foreground text-sm">Server:</span>
               <Badge variant={serverStatus === "online" ? "default" : "destructive"}>
                 {serverStatus === "online" ? "Online" : "Offline"}
               </Badge>
