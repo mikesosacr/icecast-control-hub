@@ -48,13 +48,13 @@ export function AppSidebar() {
       to={item.path}
       className={cn(
         "flex items-center gap-3 w-full px-3 py-2 rounded-md transition-all duration-200 group",
-        "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
       )}
     >
       <item.icon className={cn(
         "h-5 w-5 shrink-0 transition-colors",
-        "text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground",
+        "text-sidebar-foreground group-hover:text-sidebar-accent-foreground",
         isActive && "text-sidebar-accent-foreground"
       )} />
       <span className="text-sm font-medium">{item.title}</span>
@@ -75,7 +75,7 @@ export function AppSidebar() {
         </div>
         <div className="flex flex-col">
           <span className="font-bold text-sidebar-foreground text-lg">Icecast</span>
-          <span className="text-sidebar-foreground/70 text-xs">Control Hub</span>
+          <span className="text-sidebar-foreground/80 text-xs">Control Hub</span>
         </div>
       </SidebarHeader>
       
@@ -87,14 +87,14 @@ export function AppSidebar() {
                 "h-2 w-2 rounded-full",
                 serverStatus === "online" ? "bg-green-500" : "bg-destructive"
               )}/>
-              <span className="text-sidebar-foreground/80 text-sm">Server:</span>
+              <span className="text-sidebar-foreground text-sm">Server:</span>
               <Badge variant={serverStatus === "online" ? "default" : "destructive"}>
                 {serverStatus === "online" ? "Online" : "Offline"}
               </Badge>
             </div>
           </div>
           
-          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-medium px-4 mb-2">
+          <SidebarGroupLabel className="text-sidebar-foreground/80 text-xs font-semibold uppercase tracking-wider px-4 mb-2">
             Navigation
           </SidebarGroupLabel>
           
@@ -108,7 +108,7 @@ export function AppSidebar() {
         </SidebarGroup>
         
         <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/50 text-xs font-medium px-4 mb-2">
+          <SidebarGroupLabel className="text-sidebar-foreground/80 text-xs font-semibold uppercase tracking-wider px-4 mb-2">
             Server Management
           </SidebarGroupLabel>
           
@@ -123,7 +123,7 @@ export function AppSidebar() {
       </SidebarContent>
       
       <SidebarFooter className="px-6 py-3">
-        <div className="flex items-center justify-between text-sidebar-foreground/60 text-xs">
+        <div className="flex items-center justify-between text-sidebar-foreground/80 text-xs">
           <span>IcecastAdmin v1.0.0</span>
         </div>
       </SidebarFooter>
