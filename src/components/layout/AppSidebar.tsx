@@ -75,7 +75,7 @@ export function AppSidebar() {
         </div>
         <div className="flex flex-col">
           <span className="font-bold text-sidebar-foreground text-lg">Icecast</span>
-          <span className="text-sidebar-foreground/70 text-xs">Control Hub</span>
+          <span className="text-sidebar-foreground/80 text-xs">Control Hub</span>
         </div>
       </SidebarHeader>
       
