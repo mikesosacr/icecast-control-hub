@@ -48,13 +48,13 @@ export function AppSidebar() {
       to={item.path}
       className={cn(
         "flex items-center gap-3 w-full px-3 py-2 rounded-md transition-all duration-200 group",
-        "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         isActive && "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
       )}
     >
       <item.icon className={cn(
         "h-5 w-5 shrink-0 transition-colors",
-        "text-sidebar-foreground/60 group-hover:text-sidebar-accent-foreground",
+        "text-sidebar-foreground group-hover:text-sidebar-accent-foreground",
         isActive && "text-sidebar-accent-foreground"
       )} />
       <span className="text-sm font-medium">{item.title}</span>
