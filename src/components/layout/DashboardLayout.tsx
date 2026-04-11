@@ -22,6 +22,7 @@ import {
   HelpCircle 
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar/sidebar-trigger";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 
@@ -41,6 +42,8 @@ const DashboardLayout = () => {
         <div className="border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10 shadow-sm">
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center h-14">
+              <div className="flex items-center gap-2">
+              <SidebarTrigger className="md:hidden" />
               <Menubar className="border-none px-0 bg-transparent">
                 <MenubarMenu>
                   <MenubarTrigger className={cn(
@@ -140,6 +143,7 @@ const DashboardLayout = () => {
                   </MenubarContent>
                 </MenubarMenu>
               </Menubar>
+              </div>
               
               {/* Right side elements */}
               <div className="flex items-center gap-2">
