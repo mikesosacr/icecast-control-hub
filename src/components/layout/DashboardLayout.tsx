@@ -22,6 +22,7 @@ import {
   HelpCircle 
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { SidebarTrigger } from "@/components/ui/sidebar/sidebar-trigger";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 
