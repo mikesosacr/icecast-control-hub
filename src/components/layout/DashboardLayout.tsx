@@ -143,6 +143,7 @@ const DashboardLayout = () => {
                   </MenubarContent>
                 </MenubarMenu>
               </Menubar>
+              </div>
               
               {/* Right side elements */}
               <div className="flex items-center gap-2">
