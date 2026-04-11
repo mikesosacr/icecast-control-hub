@@ -41,7 +41,8 @@ const DashboardLayout = () => {
         {/* Top Navigation */}
         <div className="border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10 shadow-sm">
           <div className="container mx-auto px-4">
-            <div className="flex items-center gap-2">
+            <div className="flex justify-between items-center h-14">
+              <div className="flex items-center gap-2">
               <SidebarTrigger className="md:hidden" />
               <Menubar className="border-none px-0 bg-transparent">
                 <MenubarMenu>
