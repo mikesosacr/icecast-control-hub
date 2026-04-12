@@ -42,7 +42,6 @@ const NewMountpoint = () => {
         sampleRate: data.sampleRate,
         streamUrl: `${data.point}`,
         streamUser: "source",
-        streamPassword: "hackme",
         listeners: {
           current: 0,
           peak: 0,
