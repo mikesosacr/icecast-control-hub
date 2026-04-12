@@ -28,7 +28,18 @@ export interface MountPoint {
   streamPassword: string; // source password
   isPublic: boolean;
   status: 'active' | 'inactive';
-  streamStart?: string; // Adding this as it's used in the NewMountpoint form
+  streamStart?: string;
+  mount?: string;
+  contentType?: string;
+  encoderInfo?: {
+    host: string;
+    port: number;
+    mount: string;
+    username: string;
+    password: string;
+    protocol: string;
+    streamUrl: string;
+  };
 }
 
 export interface User {
