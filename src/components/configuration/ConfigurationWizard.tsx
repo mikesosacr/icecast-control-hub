@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,24 +5,31 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useConfigMutation } from "@/hooks/useIcecastApi";
-import { IcecastConfig, configToXml, parseXmlToConfig } from "@/lib/xml-config";
+import { parseXmlToConfig } from "@/lib/xml-config";
 import { toast } from "sonner";
 import { ConfigFormValues, configSchema } from "./schema/config-schema";
 import { ServerSection } from "./sections/ServerSection";
 import { LimitsSection } from "./sections/LimitsSection";
 import { AuthenticationSection } from "./sections/AuthenticationSection";
 import { ListenSection } from "./sections/ListenSection";
-import { MountPointsSection } from "./sections/MountPointsSection";
 
 interface ConfigurationWizardProps {
   currentConfig: string;
   onSave: () => void;
 }
 
+function patchXmlValue(xml: string, tag: string, value: string): string {
+  const regex = new RegExp(`(<${tag}>)[^<]*(</${tag}>)`, 'g');
+  if (regex.test(xml)) {
+    return xml.replace(new RegExp(`(<${tag}>)[^<]*(</${tag}>)`, 'g'), `$1${value}$2`);
+  }
+  return xml;
+}
+
 const ConfigurationWizard = ({ currentConfig, onSave }: ConfigurationWizardProps) => {
   const { updateConfig, isUpdating } = useConfigMutation();
   const parsedConfig = React.useMemo(() => parseXmlToConfig(currentConfig), [currentConfig]);
-  
+
   const form = useForm<ConfigFormValues>({
     resolver: zodResolver(configSchema),
     defaultValues: parsedConfig,
@@ -32,44 +38,37 @@ const ConfigurationWizard = ({ currentConfig, onSave }: ConfigurationWizardProps
 
   const handleSubmit = (data: ConfigFormValues) => {
     try {
-      // Ensure data matches the IcecastConfig interface
-      const config: IcecastConfig = {
-        server: {
-          location: data.server.location,
-          admin: data.server.admin,
-        },
-        limits: {
-          clients: data.limits.clients,
-          sources: data.limits.sources,
-          queueSize: data.limits.queueSize,
-          clientTimeout: data.limits.clientTimeout,
-          headerTimeout: data.limits.headerTimeout,
-          sourceTimeout: data.limits.sourceTimeout,
-        },
-        authentication: {
-          sourcePassword: data.authentication.sourcePassword,
-          relayPassword: data.authentication.relayPassword,
-          adminUser: data.authentication.adminUser,
-          adminPassword: data.authentication.adminPassword,
-        },
-        listen: {
-          port: data.listen.port,
-          bindAddress: data.listen.bindAddress,
-        },
-        // Make sure mountPoints is always an array and all mount points have required mountName
-        mountPoints: (data.mountPoints || [])
-          .filter((mp): mp is {mountName: string; maxListeners?: number; fallbackMount?: string} => 
-            Boolean(mp && mp.mountName)
-          ),
-      };
-      
-      const xmlConfig = configToXml(config);
-      updateConfig({ config: xmlConfig });
-      toast.success("Configuration saved");
+      // Partir del XML actual y solo parchear los valores cambiados
+      // Esto preserva los bloques <mount>, <paths>, <logging>, etc.
+      let xml = currentConfig;
+
+      // Server
+      xml = patchXmlValue(xml, 'location', data.server.location);
+      xml = patchXmlValue(xml, 'admin', data.server.admin);
+
+      // Limits
+      xml = patchXmlValue(xml, 'clients', String(data.limits.clients));
+      xml = patchXmlValue(xml, 'sources', String(data.limits.sources));
+      xml = patchXmlValue(xml, 'queue-size', String(data.limits.queueSize));
+      xml = patchXmlValue(xml, 'client-timeout', String(data.limits.clientTimeout));
+      xml = patchXmlValue(xml, 'header-timeout', String(data.limits.headerTimeout));
+      xml = patchXmlValue(xml, 'source-timeout', String(data.limits.sourceTimeout));
+
+      // Authentication
+      xml = patchXmlValue(xml, 'source-password', data.authentication.sourcePassword);
+      xml = patchXmlValue(xml, 'relay-password', data.authentication.relayPassword);
+      xml = patchXmlValue(xml, 'admin-user', data.authentication.adminUser);
+      xml = patchXmlValue(xml, 'admin-password', data.authentication.adminPassword);
+
+      // Listen
+      xml = patchXmlValue(xml, 'port', String(data.listen.port));
+
+      updateConfig({ config: xml, serverId: 'local' });
+      toast.success("Configuración guardada correctamente");
       onSave();
     } catch (error) {
-      console.error("Error converting form data to XML:", error);
-      toast.error("Failed to save configuration");
+      console.error("Error saving config:", error);
+      toast.error("Error al guardar la configuración");
     }
   };
 
@@ -90,32 +89,25 @@ const ConfigurationWizard = ({ currentConfig, onSave }: ConfigurationWizardProps
               <LimitsSection form={form} />
             </AccordionContent>
           </AccordionItem>
-          
+
           <AccordionItem value="authentication">
             <AccordionTrigger>Authentication</AccordionTrigger>
             <AccordionContent>
               <AuthenticationSection form={form} />
             </AccordionContent>
           </AccordionItem>
-          
+
           <AccordionItem value="listen">
             <AccordionTrigger>Listening Socket</AccordionTrigger>
             <AccordionContent>
               <ListenSection form={form} />
             </AccordionContent>
           </AccordionItem>
-
-          <AccordionItem value="mountpoints">
-            <AccordionTrigger>Mount Points</AccordionTrigger>
-            <AccordionContent>
-              <MountPointsSection form={form} />
-            </AccordionContent>
-          </AccordionItem>
         </Accordion>
 
         <div className="flex justify-end mt-6 space-x-2">
           <Button type="submit" disabled={isUpdating}>
-            {isUpdating ? "Saving..." : "Save Configuration"}
+            {isUpdating ? "Guardando..." : "Guardar Configuración"}
           </Button>
         </div>
       </form>

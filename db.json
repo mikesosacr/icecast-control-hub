@@ -6,7 +6,7 @@
       "point": "/lalala",
       "description": "asddfsdf",
       "genre": "varios",
-      "type": "audio/aac",
+      "type": "audio/aacp",
       "bitrate": 128,
       "sampleRate": 44100,
       "streamUrl": "/lalala",
@@ -15,7 +15,7 @@
         "current": 0,
         "peak": 0
       },
-      "status": "configured",
+      "status": "inactive",
       "isPublic": true,
       "streamStart": "2026-04-12T04:46:35.244Z",
       "mount": "/lalala",

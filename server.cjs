@@ -236,9 +236,9 @@ app.get('/api/servers', async (req, res) => {
   try {
     const result = await icecastRequest('/admin/stats');
     const status = result.status === 200 ? 'online' : 'offline';
-    res.json([{ id: 'local', name: 'Local Icecast Server', host: ICECAST_HOST, port: ICECAST_PORT, adminUser: ICECAST_ADMIN_USER, status, isLocal: true }]);
+    res.json([{ id: 'local', name: 'Local Icecast Server', host: PUBLIC_HOST, port: ICECAST_PORT, adminUser: ICECAST_ADMIN_USER, status, isLocal: true }]);
   } catch {
-    res.json([{ id: 'local', name: 'Local Icecast Server', host: ICECAST_HOST, port: ICECAST_PORT, adminUser: ICECAST_ADMIN_USER, status: 'offline', isLocal: true }]);
+    res.json([{ id: 'local', name: 'Local Icecast Server', host: PUBLIC_HOST, port: ICECAST_PORT, adminUser: ICECAST_ADMIN_USER, status: 'offline', isLocal: true }]);
   }
 });
 
