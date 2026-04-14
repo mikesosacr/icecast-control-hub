@@ -30,37 +30,6 @@
         "streamUrl": "http://129.146.17.95:8000/lalala"
       },
       "createdAt": "2026-04-12T04:46:33.759Z"
-    },
-    {
-      "id": "1775969373927",
-      "name": "patitos radio",
-      "point": "/patos",
-      "description": "cDCds",
-      "genre": "varios",
-      "type": "audio/aac",
-      "bitrate": 128,
-      "sampleRate": 44100,
-      "streamUrl": "/patos",
-      "streamUser": "source",
-      "listeners": {
-        "current": 0,
-        "peak": 0
-      },
-      "status": "configured",
-      "isPublic": true,
-      "streamStart": "2026-04-12T04:49:35.405Z",
-      "mount": "/patos",
-      "streamPassword": "Z7n5hC8VfLGe3COb",
-      "encoderInfo": {
-        "host": "129.146.17.95",
-        "port": 8000,
-        "mount": "/patos",
-        "username": "source",
-        "password": "Z7n5hC8VfLGe3COb",
-        "protocol": "Icecast2",
-        "streamUrl": "http://129.146.17.95:8000/patos"
-      },
-      "createdAt": "2026-04-12T04:49:33.928Z"
     }
   ],
   "users": [
@@ -69,17 +38,6 @@
       "username": "admin",
       "role": "admin",
       "active": true
-    },
-    {
-      "id": "1775946518563",
-      "username": "laclasica",
-      "password": "laclasica123",
-      "role": "streamer",
-      "allowedMountpoints": [
-        "1775946093947"
-      ],
-      "active": true,
-      "createdAt": "2026-04-11T22:28:38.563Z"
     }
   ]
 }

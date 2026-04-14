@@ -203,13 +203,26 @@ app.post('/api/auth/login', async (req, res) => {
   } catch {
     return res.status(401).json({ success: false, message: 'Invalid credentials format' });
   }
-  try {
-    const result = await icecastRequest('/admin/stats');
-    if (result.status === 200) return res.json({ success: true, message: 'Login successful', user: { username, role: 'admin' } });
-  } catch {}
+
+  // Verificar si es el admin de Icecast
   if (username === ICECAST_ADMIN_USER && password === ICECAST_ADMIN_PASSWORD) {
-    return res.json({ success: true, message: 'Login successful', user: { username, role: 'admin' } });
+    return res.json({ success: true, message: 'Login successful', user: { username, role: 'admin', allowedMountpoints: [] } });
   }
+
+  // Verificar contra la DB de usuarios
+  const db = loadDb();
+  const user = (db.users || []).find(u => u.username === username && u.password === password && u.active);
+  if (user) {
+    if (user.role === 'admin') {
+      return res.json({ success: true, message: 'Login successful', user: { id: user.id, username: user.username, role: 'admin', allowedMountpoints: [] } });
+    }
+    if (user.role === 'streamer') {
+      // Obtener info de los mountpoints asignados
+      const assignedMountpoints = (db.mountpoints || []).filter(mp => (user.allowedMountpoints || []).includes(mp.id));
+      return res.json({ success: true, message: 'Login successful', user: { id: user.id, username: user.username, role: 'streamer', allowedMountpoints: user.allowedMountpoints || [], mountpoints: assignedMountpoints } });
+    }
+  }
+
   res.status(401).json({ success: false, message: 'Invalid credentials' });
 });
 
@@ -521,6 +534,47 @@ app.delete('/api/users/:id', (req, res) => {
   db.users = (db.users || []).filter(u => u.id !== req.params.id);
   saveDb(db);
   res.json({ success: true });
+});
+
+
+// ─── Site Config API ──────────────────────────────────────────────────────────
+app.get('/api/site-config', (req, res) => {
+  const db = loadDb();
+  const defaultConfig = {
+    siteName: "StreamPro",
+    tagline: "Tu plataforma de radio online",
+    description: "La solución más completa para gestionar y transmitir audio en vivo. Profesional, rápido y confiable.",
+    primaryColor: "#2563eb",
+    accentColor: "#7c3aed",
+    logoUrl: "",
+    heroImage: "",
+    ctaText: "Comenzar ahora",
+    ctaSubtext: "Configura tu radio en minutos",
+    features: [
+      { icon: "radio", title: "Streaming en Vivo", description: "Transmite audio de alta calidad a tus oyentes en cualquier parte del mundo." },
+      { icon: "users", title: "Gestión de Oyentes", description: "Monitorea y analiza tu audiencia en tiempo real con estadísticas detalladas." },
+      { icon: "shield", title: "Seguridad Total", description: "Control de acceso por roles, autenticación segura y protección de tus streams." },
+      { icon: "zap", title: "Alta Performance", description: "Infraestructura optimizada para transmisiones continuas sin interrupciones." },
+      { icon: "music", title: "Multi-formato", description: "Soporte para MP3, AAC, OGG y más formatos de audio profesionales." },
+      { icon: "settings", title: "Panel Completo", description: "Administra todo desde un solo lugar: streams, usuarios, estadísticas y más." }
+    ],
+    plans: [
+      { name: "Básico", price: "9.99", period: "mes", color: "#2563eb", features: ["1 Stream", "128 kbps", "100 oyentes", "Soporte básico"], highlighted: false },
+      { name: "Pro", price: "24.99", period: "mes", color: "#7c3aed", features: ["5 Streams", "320 kbps", "500 oyentes", "Soporte prioritario", "Estadísticas avanzadas"], highlighted: true },
+      { name: "Business", price: "59.99", period: "mes", color: "#059669", features: ["Streams ilimitados", "Sin límite de bitrate", "Oyentes ilimitados", "Soporte 24/7", "SLA garantizado", "IP dedicada"], highlighted: false }
+    ],
+    socialLinks: { facebook: "", twitter: "", instagram: "", youtube: "" },
+    contactEmail: "",
+    footerText: "© 2025 StreamPro. Todos los derechos reservados."
+  };
+  res.json({ success: true, data: { ...defaultConfig, ...(db.siteConfig || {}) } });
+});
+
+app.put('/api/site-config', (req, res) => {
+  const db = loadDb();
+  db.siteConfig = { ...(db.siteConfig || {}), ...req.body };
+  saveDb(db);
+  res.json({ success: true, data: db.siteConfig });
 });
 
 app.listen(PORT, () => {

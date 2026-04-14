@@ -59,7 +59,12 @@ export function useUserMutations() {
       updateMutation.mutate(params, createMutationHandlers('User updated successfully'));
     },
     deleteUser: (params: { serverId?: string, userId: string }) => {
-      deleteMutation.mutate(params, createMutationHandlers('User deleted successfully'));
+      deleteMutation.mutate(params, {
+        ...createMutationHandlers('User deleted successfully'),
+        onSuccess: (data: any) => {
+          queryClient.invalidateQueries({ queryKey: ['users', params.serverId || 'local'] });
+        }
+      });
     },
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,

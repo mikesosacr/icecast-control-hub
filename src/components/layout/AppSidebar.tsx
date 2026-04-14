@@ -39,6 +39,7 @@ export function AppSidebar() {
   ];
 
   const serverManagementItems = [
+    { title: "Editor de Sitio", path: "/site-editor", icon: Globe },
     { title: "Server Control", path: "/server-control", icon: RefreshCw },
     { title: "Remote Servers", path: "/remote-servers", icon: Globe },
   ];

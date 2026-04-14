@@ -22,6 +22,7 @@ import {
   HelpCircle 
 } from "lucide-react";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar/sidebar-trigger";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/ui/mode-toggle";
@@ -32,6 +33,7 @@ const DashboardLayout = () => {
   const isActive = (path: string) => location.pathname === path;
   
   return (
+    <SidebarProvider>
     <div className="flex min-h-screen w-full bg-background">
       {/* Sidebar */}
       <AppSidebar />
@@ -162,6 +164,7 @@ const DashboardLayout = () => {
         <Toaster position="top-right" richColors closeButton />
       </div>
     </div>
+    </SidebarProvider>
   );
 };
 
