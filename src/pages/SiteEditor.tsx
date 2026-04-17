@@ -1,28 +1,97 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import {
-  Save, Plus, Trash2, Eye, EyeOff, Globe, Palette, Type,
-  Layout, CreditCard, Settings, ChevronDown, ChevronUp, Loader2, ExternalLink
+  Save, Plus, Trash2, Globe, Palette, Type,
+  Layout, CreditCard, ChevronDown, ChevronUp, Loader2, ExternalLink, Upload, X, Image
 } from "lucide-react";
 
-const API = import.meta.env.VITE_API_BASE_URL;
+const API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 const ICON_OPTIONS = ["radio","users","shield","zap","music","settings","layers","chart","globe","headphones"];
 
-interface Plan {
-  name: string; price: string; period: string; color: string; features: string[]; highlighted: boolean;
-}
-interface Feature {
-  icon: string; title: string; description: string;
-}
+interface Plan { name: string; price: string; period: string; color: string; features: string[]; highlighted: boolean; }
+interface Feature { icon: string; title: string; description: string; }
 interface SiteConfig {
   siteName: string; tagline: string; description: string;
   primaryColor: string; accentColor: string;
   logoUrl: string; heroImage: string;
   ctaText: string; ctaSubtext: string;
-  features: Feature[];
-  plans: Plan[];
+  features: Feature[]; plans: Plan[];
   contactEmail: string; footerText: string;
+}
+
+// ─── Image Upload Field ───────────────────────────────────────────────────────
+function ImageField({ label, value, onChange }: { label: string; value: string; onChange: (url: string) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (file: File) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const auth = localStorage.getItem("icecast_auth");
+      const res = await fetch(`${API}/upload`, {
+        method: "POST",
+        headers: { Authorization: `Basic ${auth}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.success) {
+        const fullUrl = `http://${window.location.hostname}/uploads/${data.url.split('/uploads/')[1]}`;
+        onChange(fullUrl);
+        toast.success("Imagen subida correctamente");
+      } else {
+        toast.error("Error al subir imagen");
+      }
+    } catch { toast.error("Error de conexión"); }
+    setUploading(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) handleFile(file);
+  };
+
+  return (
+    <div>
+      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">{label}</label>
+      <div className="space-y-2">
+        {/* Preview */}
+        {value && (
+          <div className="relative w-full h-24 rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+            <img src={value} alt="" className="w-full h-full object-contain" />
+            <button onClick={() => onChange("")}
+              className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 transition-all">
+              <X size={11} />
+            </button>
+          </div>
+        )}
+        {/* Drop zone */}
+        <div
+          onDrop={handleDrop}
+          onDragOver={e => e.preventDefault()}
+          onClick={() => inputRef.current?.click()}
+          className="border-2 border-dashed border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-all"
+        >
+          <input ref={inputRef} type="file" accept="image/*" className="hidden"
+            onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
+          {uploading ? (
+            <Loader2 size={18} className="animate-spin text-blue-500 shrink-0" />
+          ) : (
+            <Upload size={18} className="text-gray-400 shrink-0" />
+          )}
+          <span className="text-sm text-gray-400">{uploading ? "Subiendo..." : "Arrastra o haz clic para subir"}</span>
+        </div>
+        {/* Manual URL */}
+        <input value={value} onChange={e => onChange(e.target.value)}
+          placeholder="O pega una URL directamente..."
+          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-600 focus:outline-none focus:border-blue-400 transition-all" />
+      </div>
+    </div>
+  );
 }
 
 function Section({ title, icon, children, defaultOpen = true }: { title: string; icon: React.ReactNode; children: React.ReactNode; defaultOpen?: boolean }) {
@@ -83,61 +152,36 @@ const SiteEditor = () => {
   };
 
   const set = (key: keyof SiteConfig, value: any) => setConfig(p => p ? ({ ...p, [key]: value }) : p);
-
   const updateFeature = (i: number, key: keyof Feature, val: string) => {
     if (!config) return;
-    const f = [...config.features];
-    f[i] = { ...f[i], [key]: val };
-    set("features", f);
+    const f = [...config.features]; f[i] = { ...f[i], [key]: val }; set("features", f);
   };
-
   const addFeature = () => set("features", [...(config?.features || []), { icon: "radio", title: "Nueva función", description: "Descripción aquí" }]);
   const removeFeature = (i: number) => set("features", config!.features.filter((_, j) => j !== i));
-
   const updatePlan = (i: number, key: keyof Plan, val: any) => {
     if (!config) return;
-    const p = [...config.plans];
-    p[i] = { ...p[i], [key]: val };
-    set("plans", p);
+    const p = [...config.plans]; p[i] = { ...p[i], [key]: val }; set("plans", p);
   };
-
   const updatePlanFeature = (pi: number, fi: number, val: string) => {
     if (!config) return;
-    const p = [...config.plans];
-    const feats = [...p[pi].features];
-    feats[fi] = val;
-    p[pi] = { ...p[pi], features: feats };
-    set("plans", p);
+    const p = [...config.plans]; const feats = [...p[pi].features]; feats[fi] = val; p[pi] = { ...p[pi], features: feats }; set("plans", p);
   };
-
   const addPlanFeature = (pi: number) => {
     if (!config) return;
-    const p = [...config.plans];
-    p[pi] = { ...p[pi], features: [...p[pi].features, "Nueva característica"] };
-    set("plans", p);
+    const p = [...config.plans]; p[pi] = { ...p[pi], features: [...p[pi].features, "Nueva característica"] }; set("plans", p);
   };
-
   const removePlanFeature = (pi: number, fi: number) => {
     if (!config) return;
-    const p = [...config.plans];
-    p[pi] = { ...p[pi], features: p[pi].features.filter((_, j) => j !== fi) };
-    set("plans", p);
+    const p = [...config.plans]; p[pi] = { ...p[pi], features: p[pi].features.filter((_, j) => j !== fi) }; set("plans", p);
   };
-
   const addPlan = () => set("plans", [...(config?.plans || []), { name: "Nuevo Plan", price: "0", period: "mes", color: "#2563eb", features: ["Característica 1"], highlighted: false }]);
   const removePlan = (i: number) => set("plans", config!.plans.filter((_, j) => j !== i));
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-20">
-      <Loader2 size={24} className="animate-spin text-blue-500" />
-    </div>
-  );
-
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 size={24} className="animate-spin text-blue-500" /></div>;
   if (!config) return <div className="text-center py-20 text-gray-400">Error cargando configuración</div>;
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-gray-900">Editor de Sitio</h1>
@@ -156,7 +200,7 @@ const SiteEditor = () => {
         </div>
       </div>
 
-      {/* ── BRANDING ──────────────────────────────────────────────────────── */}
+      {/* BRANDING */}
       <Section title="Marca y Apariencia" icon={<Palette size={16} />}>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Nombre del servicio">
@@ -179,16 +223,14 @@ const SiteEditor = () => {
               <input value={config.accentColor} onChange={e => set("accentColor", e.target.value)} className={`${inputCls} font-mono`} />
             </div>
           </Field>
-          <Field label="URL del logo">
-            <input value={config.logoUrl} onChange={e => set("logoUrl", e.target.value)} className={inputCls} placeholder="https://..." />
-          </Field>
-          <Field label="Imagen de fondo del hero">
-            <input value={config.heroImage} onChange={e => set("heroImage", e.target.value)} className={inputCls} placeholder="https://..." />
-          </Field>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+          <ImageField label="Logo del servicio" value={config.logoUrl} onChange={v => set("logoUrl", v)} />
+          <ImageField label="Imagen de fondo del hero" value={config.heroImage} onChange={v => set("heroImage", v)} />
         </div>
       </Section>
 
-      {/* ── TEXTS ──────────────────────────────────────────────────────────── */}
+      {/* TEXTS */}
       <Section title="Textos y Contenido" icon={<Type size={16} />}>
         <Field label="Tagline (título principal)">
           <input value={config.tagline} onChange={e => set("tagline", e.target.value)} className={inputCls} placeholder="Tu plataforma de radio online" />
@@ -204,13 +246,13 @@ const SiteEditor = () => {
           <Field label="Subtexto del CTA">
             <input value={config.ctaSubtext} onChange={e => set("ctaSubtext", e.target.value)} className={inputCls} placeholder="Sin tarjeta de crédito" />
           </Field>
-          <Field label="Texto del footer">
-            <input value={config.footerText} onChange={e => set("footerText", e.target.value)} className={`${inputCls} sm:col-span-2`} />
-          </Field>
         </div>
+        <Field label="Texto del footer">
+          <input value={config.footerText} onChange={e => set("footerText", e.target.value)} className={inputCls} />
+        </Field>
       </Section>
 
-      {/* ── FEATURES ───────────────────────────────────────────────────────── */}
+      {/* FEATURES */}
       <Section title="Características / Features" icon={<Layout size={16} />}>
         <div className="space-y-3">
           {config.features.map((f, i) => (
@@ -218,8 +260,7 @@ const SiteEditor = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                 <div>
                   <label className="text-xs text-gray-400 block mb-1">Icono</label>
-                  <select value={f.icon} onChange={e => updateFeature(i, "icon", e.target.value)}
-                    className={inputCls}>
+                  <select value={f.icon} onChange={e => updateFeature(i, "icon", e.target.value)} className={inputCls}>
                     {ICON_OPTIONS.map(ic => <option key={ic} value={ic}>{ic}</option>)}
                   </select>
                 </div>
@@ -245,7 +286,7 @@ const SiteEditor = () => {
         </div>
       </Section>
 
-      {/* ── PLANS ──────────────────────────────────────────────────────────── */}
+      {/* PLANS */}
       <Section title="Planes y Precios" icon={<CreditCard size={16} />}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {config.plans.map((plan, pi) => (
@@ -257,42 +298,32 @@ const SiteEditor = () => {
                   <input value={plan.name} onChange={e => updatePlan(pi, "name", e.target.value)}
                     className="font-bold text-gray-800 text-sm bg-transparent border-b border-gray-200 focus:outline-none focus:border-blue-400 w-24" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => updatePlan(pi, "highlighted", !plan.highlighted)}
-                    title="Destacar plan"
-                    className={`p-1.5 rounded-lg transition-all ${plan.highlighted ? "bg-yellow-100 text-yellow-600" : "text-gray-300 hover:text-yellow-500"}`}>
-                    ⭐
-                  </button>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => updatePlan(pi, "highlighted", !plan.highlighted)}
+                    className={`p-1.5 rounded-lg transition-all ${plan.highlighted ? "bg-yellow-100 text-yellow-600" : "text-gray-300 hover:text-yellow-500"}`}>⭐</button>
                   <button onClick={() => removePlan(pi)}
-                    className="p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-all">
-                    <Trash2 size={13} />
-                  </button>
+                    className="p-1.5 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-all"><Trash2 size={13} /></button>
                 </div>
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
                   <label className="text-xs text-gray-400 block mb-1">Precio</label>
-                  <input value={plan.price} onChange={e => updatePlan(pi, "price", e.target.value)}
-                    className={inputCls} placeholder="9.99" />
+                  <input value={plan.price} onChange={e => updatePlan(pi, "price", e.target.value)} className={inputCls} placeholder="9.99" />
                 </div>
                 <div className="w-24">
                   <label className="text-xs text-gray-400 block mb-1">Período</label>
-                  <input value={plan.period} onChange={e => updatePlan(pi, "period", e.target.value)}
-                    className={inputCls} placeholder="mes" />
+                  <input value={plan.period} onChange={e => updatePlan(pi, "period", e.target.value)} className={inputCls} placeholder="mes" />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-2">Características incluidas</label>
+                <label className="text-xs text-gray-400 block mb-2">Características</label>
                 <div className="space-y-1.5">
                   {plan.features.map((feat, fi) => (
                     <div key={fi} className="flex gap-1.5">
                       <input value={feat} onChange={e => updatePlanFeature(pi, fi, e.target.value)}
                         className={`${inputCls} flex-1 text-xs py-1.5`} />
                       <button onClick={() => removePlanFeature(pi, fi)}
-                        className="px-2 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-all">
-                        <Trash2 size={12} />
-                      </button>
+                        className="px-2 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition-all"><Trash2 size={12} /></button>
                     </div>
                   ))}
                   <button onClick={() => addPlanFeature(pi)}
@@ -310,7 +341,6 @@ const SiteEditor = () => {
         </div>
       </Section>
 
-      {/* Save bottom */}
       <div className="flex justify-end pb-4">
         <button onClick={save} disabled={saving}
           className="flex items-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-8 py-3 font-semibold shadow-md transition-all disabled:opacity-60">

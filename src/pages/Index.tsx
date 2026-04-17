@@ -5,7 +5,7 @@ import { login } from "@/services/api/auth";
 import { ChangeCredentialsDialog } from "@/components/auth/ChangeCredentialsDialog";
 import {
   Radio, BarChart2, Shield, Settings, Music, Layers, Zap, Users,
-  ArrowRight, LogIn, Play, Check, Star, Globe, Headphones, ChevronRight
+  ArrowRight, LogIn, Play, Check, CheckCircle, Star, Globe, Headphones, ChevronRight, Send, X
 } from "lucide-react";
 
 const API = import.meta.env.VITE_API_BASE_URL;
@@ -72,6 +72,13 @@ const Index = () => {
   const navigate = useNavigate();
   const [config, setConfig] = useState<SiteConfig>(defaultConfig);
   const [showLogin, setShowLogin] = useState(false);
+  const [showServiceRequest, setShowServiceRequest] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState("");
+  const [srForm, setSrForm] = useState({ name: "", username: "", password: "", radioName: "", plan: "", codec: "AAC", paymentMethod: "", paymentRef: "", paymentHolder: "", receiptUrl: "", phoneCountry: "+506", phone: "" });
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptUploading, setReceiptUploading] = useState(false);
+  const [srStep, setSrStep] = useState(1);
+  const [srLoading, setSrLoading] = useState(false);
   const [showChangeCredentials, setShowChangeCredentials] = useState(false);
   const [creds, setCreds] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -109,6 +116,15 @@ const Index = () => {
 
   const pc = config.primaryColor || "#2563eb";
   const ac = config.accentColor || "#7c3aed";
+
+  if (configLoading) return (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 rounded-full border-4 border-gray-200 border-t-blue-500 animate-spin" />
+        <p className="text-sm text-gray-400 font-medium">Cargando...</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-white font-sans overflow-x-hidden">
@@ -192,7 +208,7 @@ const Index = () => {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
-              onClick={() => setShowLogin(true)}
+              onClick={() => { setSelectedPlan(""); setShowServiceRequest(true); }}
               className="btn-primary flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-lg shadow-xl transition-all hover:scale-105"
             >
               <Play size={20} fill="white" /> {config.ctaText}
@@ -269,7 +285,7 @@ const Index = () => {
                       ))}
                     </div>
                     <button
-                      onClick={() => setShowLogin(true)}
+                      onClick={() => { setSelectedPlan(plan.name); setSrForm(f => ({ ...f, plan: plan.name })); setShowServiceRequest(true); }}
                       className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${plan.highlighted ? "bg-white text-gray-900 hover:bg-gray-100" : "text-white hover:opacity-90"}`}
                       style={!plan.highlighted ? { background: plan.color } : {}}
                     >
@@ -289,7 +305,7 @@ const Index = () => {
           <h2 className="text-4xl font-black mb-4">¿Listo para transmitir?</h2>
           <p className="text-white/80 text-lg mb-8">Únete a los streamers que ya confían en {config.siteName}</p>
           <button
-            onClick={() => setShowLogin(true)}
+            onClick={() => { setSelectedPlan(""); setShowServiceRequest(true); }}
             className="bg-white font-bold text-lg px-10 py-4 rounded-2xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all"
             style={{ color: pc }}
           >
@@ -358,6 +374,336 @@ const Index = () => {
               <button onClick={() => setShowLogin(false)} className="w-full py-2 text-sm text-gray-400 hover:text-gray-600 transition-colors">
                 Cancelar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SERVICE REQUEST MODAL */}
+      {showServiceRequest && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-6 text-white" style={{ background: `linear-gradient(135deg, ${pc}, ${ac})` }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black">{srStep === 1 ? "Solicitar Servicio" : "Método de Pago"}</h2>
+                  <p className="text-white/70 text-sm mt-1">{srStep === 1 ? (srForm.plan ? `Plan ${srForm.plan} seleccionado` : "Completa tus datos") : "Elige cómo realizar tu pago"}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {srStep === 2 && <button onClick={() => setSrStep(1)} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-all text-xs font-bold">←</button>}
+                  <button onClick={() => { setShowServiceRequest(false); setSrStep(1); }} className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-all">
+                    <X size={16} className="text-white" />
+                  </button>
+                </div>
+              </div>
+              {/* Step indicators */}
+              <div className="flex items-center gap-2 mt-4">
+                <div className="flex-1 h-1 rounded-full bg-white/40" style={{ background: srStep >= 1 ? "white" : "rgba(255,255,255,0.3)" }} />
+                <div className="flex-1 h-1 rounded-full" style={{ background: srStep >= 2 ? "white" : "rgba(255,255,255,0.3)" }} />
+              </div>
+            </div>
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {srStep === 1 ? (<>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Nombre completo</label>
+                  <input value={srForm.name} onChange={e => setSrForm(f => ({ ...f, name: e.target.value }))} placeholder="Juan Pérez" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-all" />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Nombre de radio</label>
+                  <input value={srForm.radioName} onChange={e => setSrForm(f => ({ ...f, radioName: e.target.value }))} placeholder="Radio Latina" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-all" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Usuario deseado</label>
+                <input value={srForm.username} onChange={e => setSrForm(f => ({ ...f, username: e.target.value.toLowerCase().replace(/\s/g, "") }))} placeholder="juanperez" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-all" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Contraseña deseada</label>
+                <input type="password" value={srForm.password} onChange={e => setSrForm(f => ({ ...f, password: e.target.value }))} placeholder="••••••••" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-all" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Teléfono para notificaciones <span className="text-blue-500 normal-case font-normal">(WhatsApp / Telegram)</span></label>
+                <div className="flex gap-2">
+                  <select value={srForm.phoneCountry} onChange={e => setSrForm(f => ({ ...f, phoneCountry: e.target.value }))} className="border border-gray-200 rounded-xl px-2 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-all bg-white w-36 shrink-0">
+                    <option value="+506">🇨🇷 +506 CR</option>
+                    <option value="+1">🇺🇸 +1 US</option>
+                    <option value="+1-CA">🇨🇦 +1 CA</option>
+                    <option value="+52">🇲🇽 +52 MX</option>
+                    <option value="+502">🇬🇹 +502 GT</option>
+                    <option value="+503">🇸🇻 +503 SV</option>
+                    <option value="+504">🇭🇳 +504 HN</option>
+                    <option value="+505">🇳🇮 +505 NI</option>
+                    <option value="+507">🇵🇦 +507 PA</option>
+                    <option value="+53">🇨🇺 +53 CU</option>
+                    <option value="+1-DO">🇩🇴 +1 DO</option>
+                    <option value="+57">🇨🇴 +57 CO</option>
+                    <option value="+58">🇻🇪 +58 VE</option>
+                    <option value="+51">🇵🇪 +51 PE</option>
+                    <option value="+593">🇪🇨 +593 EC</option>
+                    <option value="+591">🇧🇴 +591 BO</option>
+                    <option value="+56">🇨🇱 +56 CL</option>
+                    <option value="+54">🇦🇷 +54 AR</option>
+                    <option value="+598">🇺🇾 +598 UY</option>
+                    <option value="+595">🇵🇾 +595 PY</option>
+                    <option value="+55">🇧🇷 +55 BR</option>
+                    <option value="+34">🇪🇸 +34 ES</option>
+                    <option value="+44">🇬🇧 +44 UK</option>
+                    <option value="+49">🇩🇪 +49 DE</option>
+                    <option value="+33">🇫🇷 +33 FR</option>
+                    <option value="+39">🇮🇹 +39 IT</option>
+                    <option value="+351">🇵🇹 +351 PT</option>
+                    <option value="+31">🇳🇱 +31 NL</option>
+                    <option value="+7">🇷🇺 +7 RU</option>
+                    <option value="+86">🇨🇳 +86 CN</option>
+                    <option value="+81">🇯🇵 +81 JP</option>
+                    <option value="+82">🇰🇷 +82 KR</option>
+                    <option value="+91">🇮🇳 +91 IN</option>
+                    <option value="+966">🇸🇦 +966 SA</option>
+                    <option value="+971">🇦🇪 +971 AE</option>
+                    <option value="+27">🇿🇦 +27 ZA</option>
+                    <option value="+234">🇳🇬 +234 NG</option>
+                    <option value="+61">🇦🇺 +61 AU</option>
+                  </select>
+                  <input value={srForm.phone} onChange={e => setSrForm(f => ({ ...f, phone: e.target.value.replace(/\D/g, "") }))} placeholder="88887777" className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-all" maxLength={15} />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Te enviaremos tus credenciales y confirmación de activación.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Plan</label>
+                  <select value={srForm.plan} onChange={e => setSrForm(f => ({ ...f, plan: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-all bg-white">
+                    <option value="">Seleccionar...</option>
+                    {config.plans.map(p => <option key={p.name} value={p.name}>{p.name} — ${p.price}/{p.period}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Codec preferido</label>
+                  <select value={srForm.codec} onChange={e => setSrForm(f => ({ ...f, codec: e.target.value }))} className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-all bg-white">
+                    <option value="AAC">AAC (recomendado)</option>
+                    <option value="MP3">MP3</option>
+                    <option value="OGG">OGG Vorbis</option>
+                  </select>
+                </div>
+              </div>
+              <button
+                disabled={!srForm.name || !srForm.username || !srForm.password || !srForm.radioName || !srForm.plan}
+                onClick={() => setSrStep(2)}
+                className="w-full py-3 rounded-xl font-bold text-white text-sm disabled:opacity-50 transition-all hover:opacity-90 shadow-lg flex items-center justify-center gap-2"
+                style={{ background: `linear-gradient(135deg, ${pc}, ${ac})` }}
+              >
+                Continuar al Pago →
+              </button>
+              </>) : (() => {
+                const planObj = config.plans.find(p => p.name === srForm.plan);
+                const planPrice = parseFloat(planObj?.price || "0");
+                const PAYPAL_FEE_PCT = 4.49 / 100;
+                const PAYPAL_FEE_FIXED = 0.49;
+                const paypalTotal = ((planPrice + PAYPAL_FEE_FIXED) / (1 - PAYPAL_FEE_PCT)).toFixed(2);
+                const paypalFeeAmt = (parseFloat(paypalTotal) - planPrice).toFixed(2);
+                const SINPE_RATE = 520;
+                const sinpeTotal = Math.ceil(planPrice * SINPE_RATE);
+                return (<>
+                {/* Método selector */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2">Método de pago</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {["SINPE", "Wise", "PayPal"].map(m => (
+                      <button key={m} onClick={() => setSrForm(f => ({ ...f, paymentMethod: m }))}
+                        className={`py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${srForm.paymentMethod === m ? "border-blue-500 text-blue-600 bg-blue-50" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                        {m === "SINPE" ? "🇨🇷 SINPE" : m === "Wise" ? "💳 Wise" : "🅿️ PayPal"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {srForm.paymentMethod === "SINPE" && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-3">
+                    <p className="text-xs font-bold text-green-700 uppercase tracking-wider">Instrucciones SINPE Móvil</p>
+                    <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-green-100">
+                      <span className="text-xs text-gray-500">Número</span>
+                      <span className="font-black text-gray-900 text-lg tracking-widest">6137-7272</span>
+                    </div>
+                    <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-green-100">
+                      <span className="text-xs text-gray-500">A nombre de</span>
+                      <span className="font-bold text-gray-800">Maikel Solano Salas</span>
+                    </div>
+                    <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-green-100">
+                      <span className="text-xs text-gray-500">Monto</span>
+                      <span className="font-black text-green-700">₡{sinpeTotal.toLocaleString()}</span>
+                    </div>
+                    <p className="text-xs text-green-600">💡 Tipo de cambio referencial: ₡{SINPE_RATE}/USD</p>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Número de confirmación SINPE</label>
+                      <input value={srForm.paymentRef || ""} onChange={e => setSrForm(f => ({ ...f, paymentRef: e.target.value }))} placeholder="Ej: 202412345678" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 transition-all" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Nombre del titular de la cuenta</label>
+                      <input value={srForm.paymentHolder || ""} onChange={e => setSrForm(f => ({ ...f, paymentHolder: e.target.value }))} placeholder="Juan Pérez" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-green-400 transition-all" />
+                    </div>
+                  </div>
+                )}
+
+                {srForm.paymentMethod === "Wise" && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+                    <p className="text-xs font-bold text-blue-700 uppercase tracking-wider">Instrucciones Wise</p>
+                    <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-blue-100">
+                      <span className="text-xs text-gray-500">Email</span>
+                      <span className="font-bold text-gray-800 text-sm">mikesosa26@gmail.com</span>
+                    </div>
+                    <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-blue-100">
+                      <span className="text-xs text-gray-500">Usuario Wise</span>
+                      <span className="font-bold text-gray-800">@maikels99</span>
+                    </div>
+                    <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-blue-100">
+                      <span className="text-xs text-gray-500">Monto</span>
+                      <span className="font-black text-blue-700">${planPrice.toFixed(2)} USD</span>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Referencia / ID de transacción Wise</label>
+                      <input value={srForm.paymentRef || ""} onChange={e => setSrForm(f => ({ ...f, paymentRef: e.target.value }))} placeholder="Ej: P123456789" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-all" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Nombre del titular de la cuenta</label>
+                      <input value={srForm.paymentHolder || ""} onChange={e => setSrForm(f => ({ ...f, paymentHolder: e.target.value }))} placeholder="Juan Pérez" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-all" />
+                    </div>
+                  </div>
+                )}
+
+                {srForm.paymentMethod === "PayPal" && (
+                  <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-3">
+                    <p className="text-xs font-bold text-indigo-700 uppercase tracking-wider">Instrucciones PayPal</p>
+                    <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-indigo-100">
+                      <span className="text-xs text-gray-500">Email PayPal</span>
+                      <span className="font-bold text-gray-800 text-sm">mikesosa26@gmail.com</span>
+                    </div>
+                    {/* Calculadora */}
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-1.5">
+                      <p className="text-xs font-bold text-amber-700 uppercase tracking-wider">💡 Calculadora de comisión</p>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Precio del plan</span>
+                        <span className="font-bold">${planPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Comisión PayPal (4.49% + $0.49)</span>
+                        <span className="font-bold text-amber-700">+${paypalFeeAmt}</span>
+                      </div>
+                      <div className="border-t border-amber-200 my-1" />
+                      <div className="flex justify-between text-sm font-black">
+                        <span>Total a enviar</span>
+                        <span className="text-indigo-700 text-base">${paypalTotal}</span>
+                      </div>
+                      <p className="text-xs text-amber-600 mt-1">⚠️ Este cargo adicional de <strong>${paypalFeeAmt}</strong> corresponde a la comisión que cobra PayPal por la transacción internacional. No es un cargo nuestro.</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">ID / Referencia de transacción PayPal</label>
+                      <input value={srForm.paymentRef || ""} onChange={e => setSrForm(f => ({ ...f, paymentRef: e.target.value }))} placeholder="Ej: 9XA12345BC678901D" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-400 transition-all" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Nombre del titular de la cuenta PayPal</label>
+                      <input value={srForm.paymentHolder || ""} onChange={e => setSrForm(f => ({ ...f, paymentHolder: e.target.value }))} placeholder="Juan Pérez" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-400 transition-all" />
+                    </div>
+                  </div>
+                )}
+
+                {srForm.paymentMethod && (<>
+                  {/* Subida de comprobante */}
+                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center transition-all hover:border-blue-300 cursor-pointer relative"
+                    onClick={() => document.getElementById('receipt-upload')?.click()}
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={async e => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files[0];
+                      if (file) {
+                        setReceiptFile(file);
+                        setReceiptUploading(true);
+                        const fd = new FormData(); fd.append('file', file);
+                        try {
+                          const r = await fetch(`${API}/upload`, { method: 'POST', body: fd });
+                          const d = await r.json();
+                          if (d.success) { setSrForm(f => ({ ...f, receiptUrl: d.url })); toast.success("Comprobante subido"); }
+                          else toast.error("Error al subir archivo");
+                        } catch { toast.error("Error de conexión"); }
+                        setReceiptUploading(false);
+                      }
+                    }}
+                  >
+                    <input id="receipt-upload" type="file" accept="image/*,.pdf" className="hidden"
+                      onChange={async e => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setReceiptFile(file);
+                        setReceiptUploading(true);
+                        const fd = new FormData(); fd.append('file', file);
+                        try {
+                          const r = await fetch(`${API}/upload`, { method: 'POST', body: fd });
+                          const d = await r.json();
+                          if (d.success) { setSrForm(f => ({ ...f, receiptUrl: d.url })); toast.success("Comprobante subido ✓"); }
+                          else toast.error("Error al subir archivo");
+                        } catch { toast.error("Error de conexión"); }
+                        setReceiptUploading(false);
+                      }}
+                    />
+                    {receiptUploading ? (
+                      <div className="flex flex-col items-center gap-2 py-2">
+                        <div className="w-6 h-6 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                        <p className="text-xs text-gray-400">Subiendo...</p>
+                      </div>
+                    ) : srForm.receiptUrl ? (
+                      <div className="flex flex-col items-center gap-2 py-1">
+                        {srForm.receiptUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                          <img src={`http://129.146.17.95${srForm.receiptUrl}`} alt="Comprobante" className="max-h-24 rounded-lg object-contain mx-auto" />
+                        ) : (
+                          <div className="flex items-center gap-2 text-green-600">
+                            <CheckCircle size={20} />
+                            <span className="text-sm font-semibold">PDF subido</span>
+                          </div>
+                        )}
+                        <p className="text-xs text-green-600 font-semibold">✓ Comprobante adjunto — clic para cambiar</p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 py-2 text-gray-400">
+                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mx-auto">
+                          <Send size={18} className="rotate-45" />
+                        </div>
+                        <p className="text-sm font-semibold text-gray-600">Adjuntar comprobante de pago</p>
+                        <p className="text-xs">Imagen o PDF — clic o arrastra aquí</p>
+                        <p className="text-xs text-gray-300">(Opcional pero recomendado)</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    disabled={srLoading || !srForm.paymentRef || !srForm.paymentHolder || receiptUploading}
+                    onClick={async () => {
+                      setSrLoading(true);
+                      try {
+                        const res = await fetch(`${API}/service-requests`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...srForm, status: "pending_payment", submittedAt: new Date().toISOString() }) });
+                        const data = await res.json();
+                        if (data.success) {
+                          toast.success("¡Solicitud enviada! Verificaremos tu pago y activaremos tu cuenta.");
+                          setShowServiceRequest(false);
+                          setSrStep(1);
+                          setSrForm({ name: "", username: "", password: "", radioName: "", plan: "", codec: "AAC", paymentMethod: "", paymentRef: "", paymentHolder: "", receiptUrl: "", phoneCountry: "+506", phone: "" });
+                          setReceiptFile(null);
+                        } else { toast.error(data.error || "Error al enviar"); }
+                      } catch { toast.error("Error de conexión"); }
+                      setSrLoading(false);
+                    }}
+                    className="w-full py-3 rounded-xl font-bold text-white text-sm disabled:opacity-50 transition-all hover:opacity-90 shadow-lg flex items-center justify-center gap-2"
+                    style={{ background: `linear-gradient(135deg, ${pc}, ${ac})` }}
+                  >
+                    <Send size={16} /> {srLoading ? "Enviando..." : "Confirmar y Enviar Solicitud"}
+                  </button>
+                </>)}
+                </>);
+              })()}
+              <p className="text-center text-xs text-gray-400">
+                ¿Ya tienes cuenta?{" "}
+                <button onClick={() => { setShowServiceRequest(false); setShowLogin(true); }} className="font-semibold hover:underline" style={{ color: pc }}>
+                  Inicia sesión aquí
+                </button>
+              </p>
             </div>
           </div>
         </div>

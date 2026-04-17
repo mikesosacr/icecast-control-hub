@@ -1,35 +1,35 @@
 {
   "mountpoints": [
     {
-      "id": "1775969193759",
-      "name": "lalala radio",
-      "point": "/lalala",
-      "description": "asddfsdf",
+      "id": "1776164756711",
+      "name": "Osa Radio Online",
+      "point": "/osaradio",
+      "description": "SFdD",
       "genre": "varios",
       "type": "audio/aacp",
-      "bitrate": 128,
+      "bitrate": 192,
       "sampleRate": 44100,
-      "streamUrl": "/lalala",
+      "streamUrl": "/osaradio",
       "streamUser": "source",
       "listeners": {
         "current": 0,
         "peak": 0
       },
-      "status": "inactive",
+      "status": "configured",
       "isPublic": true,
-      "streamStart": "2026-04-12T04:46:35.244Z",
-      "mount": "/lalala",
-      "streamPassword": "N6aIcQC1KC29wuVk",
+      "streamStart": "2026-04-14T11:05:58.444Z",
+      "mount": "/osaradio",
+      "streamPassword": "p0eCiojPK9oSqsPy",
       "encoderInfo": {
         "host": "129.146.17.95",
         "port": 8000,
-        "mount": "/lalala",
+        "mount": "/osaradio",
         "username": "source",
-        "password": "N6aIcQC1KC29wuVk",
+        "password": "p0eCiojPK9oSqsPy",
         "protocol": "Icecast2",
-        "streamUrl": "http://129.146.17.95:8000/lalala"
+        "streamUrl": "http://129.146.17.95:8000/osaradio"
       },
-      "createdAt": "2026-04-12T04:46:33.759Z"
+      "createdAt": "2026-04-14T11:05:56.711Z"
     }
   ],
   "users": [
@@ -38,6 +38,128 @@
       "username": "admin",
       "role": "admin",
       "active": true
+    },
+    {
+      "id": "1776239359127",
+      "username": "mikesosacr",
+      "password": "mikesosa110690047",
+      "role": "streamer",
+      "allowedMountpoints": [
+        "1776164756711"
+      ],
+      "active": true,
+      "createdAt": "2026-04-15T07:49:19.127Z"
+    }
+  ],
+  "siteConfig": {
+    "siteName": "Costa Rica Radio Stream",
+    "tagline": "Donde tener tu radio online es mas facil de lo que te imaginas",
+    "description": "La solución más completa para gestionar y transmitir audio en vivo. Profesional, rápido y confiable.",
+    "primaryColor": "#eb2424",
+    "accentColor": "#ede740",
+    "logoUrl": "http://129.146.17.95/uploads/1776353111524-882178.png",
+    "heroImage": "",
+    "ctaText": "Comenzar ahora",
+    "ctaSubtext": "Estas a un paso de tener tu radio online!!",
+    "features": [
+      {
+        "icon": "radio",
+        "title": "Streaming en Vivo",
+        "description": "Transmite audio de alta calidad a tus oyentes en cualquier parte del mundo."
+      },
+      {
+        "icon": "users",
+        "title": "Gestión de Oyentes",
+        "description": "Monitorea y analiza tu audiencia en tiempo real con estadísticas detalladas."
+      },
+      {
+        "icon": "shield",
+        "title": "Seguridad Total",
+        "description": "Control de acceso por roles, autenticación segura y protección de tus streams."
+      },
+      {
+        "icon": "zap",
+        "title": "Alta Performance",
+        "description": "Infraestructura optimizada para transmisiones continuas sin interrupciones."
+      },
+      {
+        "icon": "music",
+        "title": "Multi-formato",
+        "description": "Con los formatos de codecs mas solicitados MP3, AAC, OGG para un stream de radio profesional."
+      },
+      {
+        "icon": "settings",
+        "title": "Panel Completo",
+        "description": "Administra todo desde un solo lugar: streams, usuarios, estadísticas y más."
+      }
+    ],
+    "plans": [
+      {
+        "name": "Básico",
+        "price": "9.99",
+        "period": "mes",
+        "color": "#2563eb",
+        "features": [
+          "1 Stream",
+          "128 kbps",
+          "100 oyentes",
+          "Soporte básico"
+        ],
+        "highlighted": false
+      },
+      {
+        "name": "Pro",
+        "price": "19.99",
+        "period": "mes",
+        "color": "#00ff1e",
+        "features": [
+          "2 Streams",
+          "192 kbps",
+          "500 oyentes",
+          "Soporte avanzado",
+          "Estadísticas avanzadas"
+        ],
+        "highlighted": true
+      },
+      {
+        "name": "Ultra",
+        "price": "29.99",
+        "period": "mes",
+        "color": "#059669",
+        "features": [
+          "5 Stream",
+          "320 kbps",
+          "Oyentes ilimitados",
+          "Soporte prioritario",
+          "Estadisticas Avanzadas"
+        ],
+        "highlighted": false
+      }
+    ],
+    "socialLinks": {
+      "facebook": "",
+      "twitter": "",
+      "instagram": "",
+      "youtube": ""
+    },
+    "contactEmail": "cr_radios@gmail.com",
+    "footerText": "© 2026 Costa Rica Radio Stream. Todos los derechos reservados."
+  },
+  "serviceRequests": [
+    {
+      "id": "1776453744741",
+      "name": "john doe",
+      "username": "juajocota",
+      "password": "jotajota123",
+      "radioName": "lalala",
+      "plan": "Básico",
+      "codec": "AAC",
+      "paymentMethod": "SINPE",
+      "paymentRef": "203151653.0659",
+      "paymentHolder": "jota jota",
+      "receiptUrl": "",
+      "status": "pending_payment",
+      "createdAt": "2026-04-17T19:22:25.437Z"
     }
   ]
 }

@@ -17,7 +17,7 @@ import {
   FileText, 
   Settings,
   RefreshCw, 
-  Globe
+  Globe, Inbox
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,7 @@ export function AppSidebar() {
 
   const serverManagementItems = [
     { title: "Editor de Sitio", path: "/site-editor", icon: Globe },
+    { title: "Solicitudes", path: "/service-requests", icon: Inbox },
     { title: "Server Control", path: "/server-control", icon: RefreshCw },
     { title: "Remote Servers", path: "/remote-servers", icon: Globe },
   ];
