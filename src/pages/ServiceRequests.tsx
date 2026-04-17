@@ -19,6 +19,7 @@ interface ServiceRequest {
   receiptUrl?: string;
   phoneCountry?: string;
   phone?: string;
+  email?: string;
   status: "pending" | "pending_payment" | "approved" | "rejected";
   createdAt: string;
   submittedAt?: string;
@@ -66,7 +67,7 @@ const ServiceRequests = () => {
     setModalReq(req);
     setModalMode(mode);
     setNote("");
-    setNotifyEmail("");
+    setNotifyEmail(mode === "approve" ? (req.email || "") : "");
   };
 
   const closeModal = () => { setModalReq(null); setModalMode(null); setNote(""); setNotifyEmail(""); };
@@ -304,6 +305,13 @@ const ServiceRequests = () => {
                     <span className="text-gray-400">📱</span>
                     <span className="text-gray-500">Tel:</span>
                     <span className="font-bold text-gray-900">{modalReq.phoneCountry} {modalReq.phone}</span>
+                  </div>
+                )}
+                {modalReq.email && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-gray-400">✉️</span>
+                    <span className="text-gray-500">Email:</span>
+                    <span className="font-bold text-gray-900">{modalReq.email}</span>
                   </div>
                 )}
               </div>

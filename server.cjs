@@ -566,7 +566,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 
 // ─── Service Requests API ────────────────────────────────────────────────────
 app.post('/api/service-requests', (req, res) => {
-  const { name, username, password, radioName, plan, codec, paymentMethod, paymentRef, paymentHolder, receiptUrl, status, submittedAt, phoneCountry, phone } = req.body;
+  const { name, username, password, radioName, plan, codec, paymentMethod, paymentRef, paymentHolder, receiptUrl, status, submittedAt, phoneCountry, phone, email } = req.body;
   if (!name || !username || !password || !radioName || !plan) {
     return res.status(400).json({ success: false, error: 'Faltan campos requeridos' });
   }
@@ -582,6 +582,7 @@ app.post('/api/service-requests', (req, res) => {
     receiptUrl: receiptUrl || '',
     phoneCountry: phoneCountry || '',
     phone: phone || '',
+    email: email || '',
     status: status || 'pending_payment',
     createdAt: submittedAt || new Date().toISOString()
   };

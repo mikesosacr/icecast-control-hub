@@ -74,7 +74,7 @@ const Index = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [showServiceRequest, setShowServiceRequest] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState("");
-  const [srForm, setSrForm] = useState({ name: "", username: "", password: "", radioName: "", plan: "", codec: "AAC", paymentMethod: "", paymentRef: "", paymentHolder: "", receiptUrl: "", phoneCountry: "+506", phone: "" });
+  const [srForm, setSrForm] = useState({ name: "", username: "", password: "", radioName: "", plan: "", codec: "AAC", paymentMethod: "", paymentRef: "", paymentHolder: "", receiptUrl: "", phoneCountry: "+506", phone: "", email: "" });
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptUploading, setReceiptUploading] = useState(false);
   const [srStep, setSrStep] = useState(1);
@@ -469,6 +469,10 @@ const Index = () => {
                 </div>
                 <p className="text-xs text-gray-400 mt-1">Te enviaremos tus credenciales y confirmación de activación.</p>
               </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Correo electrónico <span className="text-blue-500 normal-case font-normal">(para recibir credenciales)</span></label>
+                <input value={srForm.email} onChange={e => setSrForm(f => ({ ...f, email: e.target.value }))} placeholder="tucorreo@gmail.com" type="email" className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400 transition-all" />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Plan</label>
@@ -684,7 +688,7 @@ const Index = () => {
                           toast.success("¡Solicitud enviada! Verificaremos tu pago y activaremos tu cuenta.");
                           setShowServiceRequest(false);
                           setSrStep(1);
-                          setSrForm({ name: "", username: "", password: "", radioName: "", plan: "", codec: "AAC", paymentMethod: "", paymentRef: "", paymentHolder: "", receiptUrl: "", phoneCountry: "+506", phone: "" });
+                          setSrForm({ name: "", username: "", password: "", radioName: "", plan: "", codec: "AAC", paymentMethod: "", paymentRef: "", paymentHolder: "", receiptUrl: "", phoneCountry: "+506", phone: "", email: "" });
                           setReceiptFile(null);
                         } else { toast.error(data.error || "Error al enviar"); }
                       } catch { toast.error("Error de conexión"); }
