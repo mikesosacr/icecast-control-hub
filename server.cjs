@@ -9,6 +9,7 @@
  */
 
 const express = require('express');
+const nodemailer = require('nodemailer');
 const multer = require('multer');
 const path = require('path');
 
@@ -614,6 +615,86 @@ app.delete('/api/service-requests/:id', (req, res) => {
   res.json({ success: true });
 });
 
+
+// ─── APROBAR SOLICITUD → crear cuenta + mountpoint + email ───────────────────
+app.post('/api/service-requests/:id/approve', async (req, res) => {
+  const db = loadDb();
+  if (!db.serviceRequests) return res.status(404).json({ success: false, error: 'No encontrado' });
+  const idx = db.serviceRequests.findIndex(r => r.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ success: false, error: 'Solicitud no encontrada' });
+  const sr = db.serviceRequests[idx];
+  const { note, notifyEmail } = req.body;
+
+  // 1. Crear usuario en db.json
+  if (!db.users) db.users = [];
+  const existingUser = db.users.find(u => u.username === sr.username);
+  if (!existingUser) {
+    db.users.push({
+      id: Date.now().toString(),
+      username: sr.username,
+      password: sr.password,
+      role: 'streamer',
+      radioName: sr.radioName,
+      plan: sr.plan,
+      active: true,
+      createdAt: new Date().toISOString(),
+      allowedMountpoints: [`/${sr.username}`]
+    });
+  }
+
+  // 2. Crear mountpoint en db.json
+  if (!db.mountpoints) db.mountpoints = [];
+  const existingMount = db.mountpoints.find(m => m.mount === `/${sr.username}`);
+  if (!existingMount) {
+    db.mountpoints.push({
+      id: Date.now().toString() + '1',
+      mount: `/${sr.username}`,
+      username: sr.username,
+      password: sr.password,
+      bitrate: '128',
+      codec: sr.codec || 'AAC',
+      description: sr.radioName,
+      genre: 'Various',
+      active: true
+    });
+  }
+
+  // 3. Actualizar icecast.xml
+  try {
+    const fs = require('fs');
+    let xml = fs.readFileSync(ICECAST_CONFIG_PATH, 'utf8');
+    const mountBlock = '\n    <mount>\n      <mount-name>/' + sr.username + '</mount-name>\n      <username>' + sr.username + '</username>\n      <password>' + sr.password + '</password>\n      <max-listeners>100</max-listeners>\n      <stream-name>' + sr.radioName + '</stream-name>\n    </mount>';
+    if (!xml.includes('<mount-name>/' + sr.username + '</mount-name>')) {
+      xml = xml.replace('</icecast>', mountBlock + '\n</icecast>');
+      fs.writeFileSync(ICECAST_CONFIG_PATH, xml);
+    }
+  } catch(e) { console.error('Error actualizando icecast.xml:', e.message); }
+
+  // 4. Actualizar estado
+  db.serviceRequests[idx] = { ...sr, status: 'approved', approvedAt: new Date().toISOString(), note: note || '' };
+  saveDb(db);
+
+  // 5. Enviar email si se proporcionó
+  let emailSent = false;
+  if (notifyEmail) {
+    emailSent = await sendApprovalEmail(notifyEmail, sr.name, sr.username, sr.password, sr.radioName, sr.phone || '');
+  }
+
+  res.json({ success: true, message: 'Cuenta creada y aprobada', emailSent });
+});
+
+// ─── RECHAZAR SOLICITUD ───────────────────────────────────────────────────────
+app.post('/api/service-requests/:id/reject', (req, res) => {
+  const db = loadDb();
+  if (!db.serviceRequests) return res.status(404).json({ success: false, error: 'No encontrado' });
+  const idx = db.serviceRequests.findIndex(r => r.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ success: false, error: 'Solicitud no encontrada' });
+  const { note } = req.body;
+  db.serviceRequests[idx] = { ...db.serviceRequests[idx], status: 'rejected', rejectedAt: new Date().toISOString(), note: note || '' };
+  saveDb(db);
+  res.json({ success: true });
+});
+
 // ─── Site Config API ──────────────────────────────────────────────────────────
 app.get('/api/site-config', (req, res) => {
   const db = loadDb();
@@ -653,6 +734,96 @@ app.put('/api/site-config', (req, res) => {
   saveDb(db);
   res.json({ success: true, data: db.siteConfig });
 });
+
+
+// ─── SMTP CONFIG ────────────────────────────────────────────────────────────
+app.get('/api/smtp-config', (req, res) => {
+  const db = loadDb();
+  const cfg = db.smtpConfig || {};
+  // No devolver password en claro
+  res.json({ success: true, data: { ...cfg, pass: cfg.pass ? '••••••••' : '' } });
+});
+
+app.put('/api/smtp-config', (req, res) => {
+  const { host, port, secure, user, pass, fromName, fromEmail } = req.body;
+  const db = loadDb();
+  const prev = db.smtpConfig || {};
+  db.smtpConfig = {
+    host: host || 'smtp.gmail.com',
+    port: parseInt(port) || 587,
+    secure: secure === true || secure === 'true',
+    user: user || '',
+    pass: pass && pass !== '••••••••' ? pass : (prev.pass || ''),
+    fromName: fromName || '',
+    fromEmail: fromEmail || user || ''
+  };
+  saveDb(db);
+  res.json({ success: true, message: 'Configuración SMTP guardada' });
+});
+
+app.post('/api/smtp-test', async (req, res) => {
+  const db = loadDb();
+  const cfg = db.smtpConfig;
+  if (!cfg || !cfg.user || !cfg.pass) return res.status(400).json({ success: false, error: 'SMTP no configurado' });
+  try {
+    const transporter = nodemailer.createTransport({
+      host: cfg.host,
+      port: cfg.port,
+      secure: cfg.secure,
+      auth: { user: cfg.user, pass: cfg.pass }
+    });
+    await transporter.sendMail({
+      from: `"${cfg.fromName}" <${cfg.fromEmail || cfg.user}>`,
+      to: cfg.user,
+      subject: '✅ Test SMTP - Icecast Control Hub',
+      html: '<h2>¡Funciona!</h2><p>Tu configuración SMTP está correcta.</p>'
+    });
+    res.json({ success: true, message: 'Email de prueba enviado a ' + cfg.user });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Helper para enviar credenciales al aprobar
+async function sendApprovalEmail(toEmail, toName, username, password, radioName, phone) {
+  const db = loadDb();
+  const cfg = db.smtpConfig;
+  if (!cfg || !cfg.user || !cfg.pass) return false;
+  try {
+    const transporter = nodemailer.createTransport({
+      host: cfg.host,
+      port: cfg.port,
+      secure: cfg.secure,
+      auth: { user: cfg.user, pass: cfg.pass }
+    });
+    await transporter.sendMail({
+      from: `"${cfg.fromName || 'Icecast Control Hub'}" <${cfg.fromEmail || cfg.user}>`,
+      to: toEmail || cfg.user,
+      subject: '🎙️ ¡Tu cuenta de radio ha sido activada!',
+      html: `
+        <div style="font-family:sans-serif;max-width:480px;margin:auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
+          <div style="background:linear-gradient(135deg,#2563eb,#7c3aed);padding:28px 32px">
+            <h1 style="color:white;margin:0;font-size:22px">🎙️ ¡Bienvenido a bordo!</h1>
+            <p style="color:rgba(255,255,255,0.8);margin:6px 0 0">Tu cuenta de radio ha sido activada</p>
+          </div>
+          <div style="padding:28px 32px">
+            <p style="color:#374151">Hola <strong>${toName}</strong>,</p>
+            <p style="color:#374151">Tu solicitud para <strong>${radioName}</strong> ha sido aprobada. Aquí están tus credenciales:</p>
+            <div style="background:#f3f4f6;border-radius:8px;padding:16px;margin:16px 0">
+              <p style="margin:4px 0;color:#374151"><strong>Usuario:</strong> ${username}</p>
+              <p style="margin:4px 0;color:#374151"><strong>Contraseña:</strong> ${password}</p>
+            </div>
+            <p style="color:#6b7280;font-size:13px">Si tienes preguntas, responde a este correo.</p>
+          </div>
+        </div>
+      `
+    });
+    return true;
+  } catch (err) {
+    console.error('Error enviando email:', err.message);
+    return false;
+  }
+}
 
 app.listen(PORT, () => {
   console.log(`✅ Icecast Control Hub backend v2.3 corriendo en puerto ${PORT}`);

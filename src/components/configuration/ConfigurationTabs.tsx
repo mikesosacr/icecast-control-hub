@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ConfigurationWizard from "@/components/configuration/ConfigurationWizard";
 import { XmlConfigEditor } from "@/components/configuration/XmlConfigEditor";
+import { SmtpConfig } from "@/components/configuration/SmtpConfig";
 
 interface ConfigurationTabsProps {
   xmlConfig: string;
@@ -29,6 +30,7 @@ export const ConfigurationTabs = ({
       <TabsList>
         <TabsTrigger value="xml">XML Configuration</TabsTrigger>
         <TabsTrigger value="wizard">Configuration Wizard</TabsTrigger>
+        <TabsTrigger value="email">📧 Email / SMTP</TabsTrigger>
       </TabsList>
 
       <TabsContent value="xml" className="mt-6 space-y-6">
@@ -59,6 +61,9 @@ export const ConfigurationTabs = ({
             )}
           </CardContent>
         </Card>
+      </TabsContent>
+      <TabsContent value="email" className="mt-6">
+        <SmtpConfig />
       </TabsContent>
     </Tabs>
   );
