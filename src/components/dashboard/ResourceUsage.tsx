@@ -42,15 +42,15 @@ export const ResourceUsage = ({ stats, isLoading }: ResourceUsageProps) => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">CPU Usage</span>
-                  <span className="font-medium">{stats.cpu}%</span>
+                  <span className="font-medium">{stats.cpu || 0}%</span>
                 </div>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Progress value={stats.cpu} className="h-2" />
+                      <Progress value={stats.cpu || 0} className="h-2" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      CPU: {stats.cpu}%
+                      CPU: {stats.cpu || 0}%
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -59,15 +59,15 @@ export const ResourceUsage = ({ stats, isLoading }: ResourceUsageProps) => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Memory Usage</span>
-                  <span className="font-medium">{formatBytes(stats.memory)}</span>
+                  <span className="font-medium">{formatBytes(stats.memory || 0)}</span>
                 </div>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Progress value={(stats.memory / (512 * 1024 * 1024)) * 100} className="h-2" />
+                      <Progress value={((stats.memory || 0) / (512 * 1024 * 1024)) * 100} className="h-2" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      Memory: {formatBytes(stats.memory)}
+                      Memory: {formatBytes(stats.memory || 0)}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -76,15 +76,15 @@ export const ResourceUsage = ({ stats, isLoading }: ResourceUsageProps) => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Bandwidth Usage</span>
-                  <span className="font-medium">{formatBytes(stats.bandwidth.outgoing)}/s</span>
+                  <span className="font-medium">{formatBytes(stats.bandwidth?.outgoing || 0)}/s</span>
                 </div>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Progress value={(stats.bandwidth.outgoing / (10 * 1024 * 1024)) * 100} className="h-2" />
+                      <Progress value={((stats.bandwidth?.outgoing || 0) / (10 * 1024 * 1024)) * 100} className="h-2" />
                     </TooltipTrigger>
                     <TooltipContent>
-                      Bandwidth: {formatBytes(stats.bandwidth.outgoing)}/s
+                      Bandwidth: {formatBytes(stats.bandwidth?.outgoing || 0)}/s
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

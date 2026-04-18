@@ -34,9 +34,9 @@ const Mountpoints = () => {
   const mountpoints = mountpointsResponse?.success ? mountpointsResponse.data || [] : [];
 
   const filteredMountpoints = mountpoints.filter(mp => {
-    const matchesSearch = mp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          mp.point.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (mp.description && mp.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesSearch = (mp.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (mp.point || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (mp.description || '').toLowerCase().includes(searchQuery.toLowerCase());
 
     if (statusFilter === "all") return matchesSearch;
     return matchesSearch && mp.status === statusFilter;

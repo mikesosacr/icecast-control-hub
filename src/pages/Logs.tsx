@@ -29,7 +29,7 @@ const Logs = () => {
 
   const filteredLogs = logs.filter(log => {
     if (!searchQuery) return true;
-    return log.message.toLowerCase().includes(searchQuery.toLowerCase());
+    return (log.message || '').toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const handleRefresh = () => {

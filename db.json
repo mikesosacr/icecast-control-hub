@@ -158,8 +158,19 @@
       "paymentRef": "203151653.0659",
       "paymentHolder": "jota jota",
       "receiptUrl": "",
-      "status": "pending_payment",
-      "createdAt": "2026-04-17T19:22:25.437Z"
+      "status": "approved",
+      "createdAt": "2026-04-17T19:22:25.437Z",
+      "approvedAt": "2026-04-17T20:54:14.332Z",
+      "note": "pago verificado"
     }
-  ]
+  ],
+  "smtpConfig": {
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "secure": false,
+    "user": "tcsradiocr@gmail.com",
+    "pass": "krkt mpqj kbua lcpz",
+    "fromName": "Costa Rica Radio Stream",
+    "fromEmail": "tcsradiocr@gmail.com"
+  }
 }

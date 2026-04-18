@@ -41,7 +41,7 @@ const Dashboard = () => {
   };
 
   const totalListeners = mountpoints.reduce(
-    (sum, mp) => sum + mp.listeners.current, 0
+    (sum, mp) => sum + (mp.listeners?.current || 0), 0
   );
 
   const isLoading = statsLoading || mountpointsLoading;

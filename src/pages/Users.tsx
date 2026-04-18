@@ -41,7 +41,7 @@ const Users = () => {
   const users = usersResponse?.success ? usersResponse.data || [] : [];
 
   const filteredUsers = users.filter((user: any) =>
-    user.username.toLowerCase().includes(searchQuery.toLowerCase())
+    (user.username || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

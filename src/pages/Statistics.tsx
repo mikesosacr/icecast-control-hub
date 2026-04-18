@@ -16,15 +16,15 @@ const Statistics = () => {
 
   // Calculate stats from real data
   const totalListeners = mountpointsData?.success 
-    ? mountpointsData.data?.reduce((sum, mp) => sum + mp.listeners.current, 0) || 0
+    ? mountpointsData.data?.reduce((sum, mp) => sum + (mp.listeners?.current || 0), 0) || 0
     : 0;
 
   const peakListeners = mountpointsData?.success
-    ? mountpointsData.data?.reduce((max, mp) => Math.max(max, mp.listeners.peak), 0) || 0
+    ? mountpointsData.data?.reduce((max, mp) => Math.max(max, mp.listeners?.peak || 0), 0) || 0
     : 0;
 
   const totalBandwidth = mountpointsData?.success
-    ? mountpointsData.data?.reduce((sum, mp) => sum + (mp.listeners.current * mp.bitrate), 0) || 0
+    ? mountpointsData.data?.reduce((sum, mp) => sum + ((mp.listeners?.current || 0) * (mp.bitrate || 0)), 0) || 0
     : 0;
   
   const activeMountpoints = mountpointsData?.success 
