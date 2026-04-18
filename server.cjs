@@ -175,6 +175,14 @@ function parseIcecastStats(xml) {
   const freeMem = os.freemem();
   const usedMem = totalMem - freeMem;
   const uptimeSeconds = Math.floor(os.uptime());
+  // Disco
+  let diskUsed = 0, diskTotal = 0;
+  try {
+    const { execSync } = require('child_process');
+    const diskOut = execSync("df / --output=used,size --block-size=1 | tail -1").toString().trim().split(/\s+/);
+    diskUsed = parseInt(diskOut[0]) || 0;
+    diskTotal = parseInt(diskOut[1]) || 0;
+  } catch(e) {}
   return {
     connections: { current: parseInt(parseXmlValue(xml, 'listeners') || '0'), peak: parseInt(parseXmlValue(xml, 'listener_peak') || '0') },
     listeners: { current: parseInt(parseXmlValue(xml, 'listeners') || '0'), peak: parseInt(parseXmlValue(xml, 'listener_peak') || '0') },
@@ -184,9 +192,19 @@ function parseIcecastStats(xml) {
     serverVersion: parseXmlValue(xml, 'server_id') || 'Icecast2',
     bandwidth: { outgoing: parseInt(parseXmlValue(xml, 'outgoing_kbitrate') || '0'), incoming: parseInt(parseXmlValue(xml, 'incoming_kbitrate') || '0') },
     cpu: Math.min(Math.round(cpuUsage), 100),
+    cpuCores: os.cpus().length,
+    cpuModel: os.cpus()[0]?.model || 'N/A',
+    loadAvg: os.loadavg(),
     memory: usedMem,
     memoryTotal: totalMem,
+    memoryFree: freeMem,
+    memoryPct: Math.round((usedMem / totalMem) * 100),
+    disk: { used: diskUsed, total: diskTotal, pct: diskTotal > 0 ? Math.round((diskUsed / diskTotal) * 100) : 0 },
     uptime: uptimeSeconds,
+    hostname: os.hostname(),
+    platform: os.platform(),
+    arch: os.arch(),
+    osRelease: os.release(),
     mountpoints,
   };
 }
