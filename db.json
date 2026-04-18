@@ -145,25 +145,7 @@
     "contactEmail": "cr_radios@gmail.com",
     "footerText": "© 2026 Costa Rica Radio Stream. Todos los derechos reservados."
   },
-  "serviceRequests": [
-    {
-      "id": "1776453744741",
-      "name": "john doe",
-      "username": "juajocota",
-      "password": "jotajota123",
-      "radioName": "lalala",
-      "plan": "Básico",
-      "codec": "AAC",
-      "paymentMethod": "SINPE",
-      "paymentRef": "203151653.0659",
-      "paymentHolder": "jota jota",
-      "receiptUrl": "",
-      "status": "approved",
-      "createdAt": "2026-04-17T19:22:25.437Z",
-      "approvedAt": "2026-04-17T20:54:14.332Z",
-      "note": "pago verificado"
-    }
-  ],
+  "serviceRequests": [],
   "smtpConfig": {
     "host": "smtp.gmail.com",
     "port": 587,

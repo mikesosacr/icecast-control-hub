@@ -629,6 +629,10 @@ app.post('/api/service-requests/:id/approve', async (req, res) => {
   // 1. Crear usuario en db.json
   if (!db.users) db.users = [];
   const existingUser = db.users.find(u => u.username === sr.username);
+  // Calcular fecha de vencimiento según plan
+  const planPeriod = (db.siteConfig && db.siteConfig.plans || []).find(p => p.name === sr.plan);
+  const periodDays = planPeriod && planPeriod.period === 'año' ? 365 : 30;
+  const expiresAt = new Date(Date.now() + periodDays * 24 * 60 * 60 * 1000).toISOString();
   if (!existingUser) {
     db.users.push({
       id: Date.now().toString(),
@@ -637,9 +641,15 @@ app.post('/api/service-requests/:id/approve', async (req, res) => {
       role: 'streamer',
       radioName: sr.radioName,
       plan: sr.plan,
+      planPrice: planPeriod ? planPeriod.price : '0',
+      planPeriod: planPeriod ? planPeriod.period : 'mes',
       active: true,
       createdAt: new Date().toISOString(),
-      allowedMountpoints: [`/${sr.username}`]
+      expiresAt: expiresAt,
+      serviceRequestId: sr.id,
+      email: sr.email || '',
+      phone: (sr.phoneCountry || '') + (sr.phone || ''),
+      allowedMountpoints: ['/' + sr.username]
     });
   }
 
@@ -694,6 +704,70 @@ app.post('/api/service-requests/:id/reject', (req, res) => {
   db.serviceRequests[idx] = { ...db.serviceRequests[idx], status: 'rejected', rejectedAt: new Date().toISOString(), note: note || '' };
   saveDb(db);
   res.json({ success: true });
+});
+
+
+// ─── BILLING ─────────────────────────────────────────────────────────────────
+app.get('/api/billing', (req, res) => {
+  const db = loadDb();
+  const users = (db.users || []).filter(u => u.role === 'streamer');
+  const requests = (db.serviceRequests || []).filter(r => r.status === 'approved');
+  
+  // Construir registros de billing
+  const records = users.map(u => {
+    const req = requests.find(r => r.username === u.username);
+    const now = new Date();
+    const expires = u.expiresAt ? new Date(u.expiresAt) : null;
+    const daysLeft = expires ? Math.ceil((expires - now) / (1000 * 60 * 60 * 24)) : null;
+    return {
+      id: u.id,
+      username: u.username,
+      name: req ? req.name : u.username,
+      email: u.email || (req ? req.email : ''),
+      phone: u.phone || '',
+      plan: u.plan || '—',
+      planPrice: u.planPrice || '0',
+      planPeriod: u.planPeriod || 'mes',
+      active: u.active !== false,
+      createdAt: u.createdAt,
+      expiresAt: u.expiresAt || null,
+      daysLeft: daysLeft,
+      status: !expires ? 'no_expiry' : daysLeft < 0 ? 'expired' : daysLeft <= 7 ? 'expiring_soon' : 'active',
+      paymentMethod: req ? req.paymentMethod : '',
+      paymentRef: req ? req.paymentRef : '',
+      approvedAt: req ? req.approvedAt : u.createdAt,
+    };
+  });
+
+  // Stats
+  const totalMRR = records.reduce((s, r) => s + (r.active ? parseFloat(r.planPrice || 0) : 0), 0);
+  const expiringSoon = records.filter(r => r.status === 'expiring_soon').length;
+  const expired = records.filter(r => r.status === 'expired').length;
+
+  res.json({ success: true, data: { records, stats: { totalMRR, expiringSoon, expired, totalClients: records.length } } });
+});
+
+app.patch('/api/billing/:userId/expires', (req, res) => {
+  const db = loadDb();
+  const idx = (db.users || []).findIndex(u => u.id === req.params.userId);
+  if (idx === -1) return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+  const { expiresAt } = req.body;
+  db.users[idx].expiresAt = expiresAt;
+  saveDb(db);
+  res.json({ success: true });
+});
+
+app.patch('/api/billing/:userId/renew', (req, res) => {
+  const db = loadDb();
+  const idx = (db.users || []).findIndex(u => u.id === req.params.userId);
+  if (idx === -1) return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+  const user = db.users[idx];
+  const periodDays = user.planPeriod === 'año' ? 365 : 30;
+  const base = user.expiresAt && new Date(user.expiresAt) > new Date() ? new Date(user.expiresAt) : new Date();
+  db.users[idx].expiresAt = new Date(base.getTime() + periodDays * 24 * 60 * 60 * 1000).toISOString();
+  db.users[idx].active = true;
+  saveDb(db);
+  res.json({ success: true, expiresAt: db.users[idx].expiresAt });
 });
 
 // ─── Site Config API ──────────────────────────────────────────────────────────

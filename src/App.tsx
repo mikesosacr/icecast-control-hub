@@ -18,6 +18,7 @@ import NotFound from '@/pages/NotFound';
 import MyStation from '@/pages/MyStation';
 import SiteEditor from '@/pages/SiteEditor';
 import ServiceRequests from '@/pages/ServiceRequests';
+import Billing from '@/pages/Billing';
 import { queryClient } from '@/lib/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -47,6 +48,7 @@ function App() {
                   <Route path="/remote-servers" element={<RemoteServers />} />
                   <Route path="/site-editor" element={<SiteEditor />} />
                   <Route path="/service-requests" element={<ServiceRequests />} />
+                  <Route path="/billing" element={<Billing />} />
                 </Route>
                 {/* AI Radio Player Generator is public */}
                 <Route path="/ai-radio-player" element={<AIRadioPlayerGenerator />} />
