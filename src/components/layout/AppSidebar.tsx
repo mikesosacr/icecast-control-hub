@@ -22,12 +22,14 @@ import {
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useServerStats } from "@/hooks/useIcecastApi";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export function AppSidebar() {
   const location = useLocation();
   const { data: statsData } = useServerStats();
   
   const serverStatus = statsData?.success ? 'online' : 'offline';
+  const { count: notifCount } = useNotifications();
   
   const navigationItems = [
     { title: "Dashboard", path: "/dashboard", icon: Home },
@@ -46,7 +48,7 @@ export function AppSidebar() {
     { title: "Remote Servers", path: "/remote-servers", icon: Globe },
   ];
 
-  const MenuItem = ({ item, isActive }: { item: typeof navigationItems[0], isActive: boolean }) => (
+  const MenuItem = ({ item, isActive, badge }: { item: typeof navigationItems[0], isActive: boolean, badge?: number }) => (
     <Link 
       to={item.path}
       className={cn(
@@ -61,6 +63,11 @@ export function AppSidebar() {
         isActive && "text-sidebar-accent-foreground"
       )} />
       <span className="text-sm font-medium">{item.title}</span>
+      {badge !== undefined && badge > 0 && (
+        <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-5 flex items-center justify-center px-1.5 leading-none">
+          {badge > 99 ? '99+' : badge}
+        </span>
+      )}
     </Link>
   );
 
@@ -118,7 +125,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <div className="space-y-1 px-2">
               {serverManagementItems.map((item) => (
-                <MenuItem key={item.path} item={item} isActive={location.pathname === item.path} />
+                <MenuItem key={item.path} item={item} isActive={location.pathname === item.path} badge={item.path === '/service-requests' ? notifCount : undefined} />
               ))}
             </div>
           </SidebarGroupContent>

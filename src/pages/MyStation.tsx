@@ -13,7 +13,7 @@ import { toast } from "sonner";
 const API = import.meta.env.VITE_API_BASE_URL;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Section = "overview" | "encoder" | "history" | "stats" | "player-gen";
+type Section = "overview" | "encoder" | "history" | "stats" | "player-gen" | "account";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function CopyField({ label, value }: { label: string; value: string }) {
@@ -378,6 +378,13 @@ const MyStation = () => {
   const [songHist, setSongHist] = useState<{ song: string; time: Date }[]>([]);
   const [uptimeSecs, setUptimeSecs] = useState(0);
   const [showEncoderFields, setShowEncoderFields] = useState(false);
+  const [accountData, setAccountData] = useState<any>(null);
+  const [renewModal, setRenewModal] = useState(false);
+  const [renewForm, setRenewForm] = useState({ paymentMethod: "", paymentRef: "", paymentHolder: "" });
+  const [renewSending, setRenewSending] = useState(false);
+  const [changePwModal, setChangePwModal] = useState(false);
+  const [pwForm, setPwForm] = useState({ newPass: "", confirmPass: "" });
+  const [pwSaving, setPwSaving] = useState(false);
   const iRef = useRef<any>(null);
   const lastSong = useRef("");
 
@@ -391,6 +398,15 @@ const MyStation = () => {
     return () => clearInterval(t);
   }, [navigate]);
 
+  const fetchAccount = useCallback(async () => {
+    try {
+      const auth = localStorage.getItem("icecast_auth");
+      const r = await fetch(`${API}/my-account`, { headers: { Authorization: `Basic ${auth}` } });
+      const d = await r.json();
+      if (d.success) setAccountData(d.data);
+    } catch {}
+  }, []);
+
   const fetchStats = useCallback(async () => {
     try {
       const auth = localStorage.getItem("icecast_auth");
@@ -402,6 +418,7 @@ const MyStation = () => {
   useEffect(() => {
     if (!userData) return;
     fetchStats();
+    fetchAccount();
     iRef.current = setInterval(fetchStats, 5000);
     return () => clearInterval(iRef.current);
   }, [userData, fetchStats]);
@@ -488,12 +505,19 @@ const MyStation = () => {
           <NavItem icon={<Wifi size={15} />} label="Configuración Encoder" section="encoder" active={section === "encoder"} onClick={() => setSection("encoder")} />
           <NavItem icon={<List size={15} />} label="Historial" section="history" active={section === "history"} onClick={() => setSection("history")} badge={songHist.length > 0 ? String(songHist.length) : undefined} />
           <NavItem icon={<Activity size={15} />} label="Estadísticas" section="stats" active={section === "stats"} onClick={() => setSection("stats")} />
+          <NavItem icon={<Users size={15} />} label="Mi Cuenta" section="account" active={section === "account"} onClick={() => setSection("account")} />
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mt-4 mb-2">Herramientas</div>
           <NavItem icon={<Wand2 size={15} />} label="Generador de Reproductores" section="player-gen" active={section === "player-gen"} onClick={() => setSection("player-gen")} />
         </nav>
 
         {/* Clock + Logout */}
         <div className="px-5 py-4 border-t border-gray-100 space-y-3">
+          {accountData && accountData.daysLeft !== null && accountData.daysLeft <= 7 && (
+            <div className={`rounded-xl px-3 py-2 text-xs font-semibold ${accountData.daysLeft < 0 ? "bg-red-50 text-red-600 border border-red-200" : "bg-orange-50 text-orange-600 border border-orange-200"}`}>
+              {accountData.daysLeft < 0 ? "⚠️ Plan vencido" : `⏰ Vence en ${accountData.daysLeft}d`}
+              <button onClick={() => setSection("account")} className="block text-xs underline mt-0.5 font-normal">Ver mi cuenta</button>
+            </div>
+          )}
           <div className="text-center">
             <div className="text-lg font-mono font-bold text-gray-800 tabular-nums">
               {currentTime.toLocaleTimeString("es-CR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
@@ -731,6 +755,109 @@ const MyStation = () => {
               </div>
             )}
 
+            {/* ── ACCOUNT ─────────────────────────────────────────────────── */}
+            {section === "account" && (
+              <div className="p-6 space-y-4">
+                {/* Plan info */}
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                  <div className="flex items-center gap-2 mb-5">
+                    <Users size={16} className="text-blue-500" />
+                    <h2 className="font-bold text-gray-800">Mi Cuenta</h2>
+                  </div>
+                  {accountData ? (
+                    <div className="space-y-4">
+                      {/* Status banner */}
+                      {accountData.daysLeft !== null && (
+                        <div className={`rounded-xl p-4 ${accountData.status === "expired" ? "bg-red-50 border border-red-200" : accountData.status === "expiring_soon" ? "bg-orange-50 border border-orange-200" : "bg-green-50 border border-green-200"}`}>
+                          <p className={`text-sm font-bold ${accountData.status === "expired" ? "text-red-700" : accountData.status === "expiring_soon" ? "text-orange-700" : "text-green-700"}`}>
+                            {accountData.status === "expired" ? "⚠️ Tu plan ha vencido" : accountData.status === "expiring_soon" ? `⏰ Tu plan vence en ${accountData.daysLeft} días` : `✅ Plan activo · ${accountData.daysLeft} días restantes`}
+                          </p>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-4">
+                        {[
+                          { label: "Plan", value: accountData.plan },
+                          { label: "Precio", value: `$${accountData.planPrice}/${accountData.planPeriod}` },
+                          { label: "Activado", value: accountData.createdAt ? new Date(accountData.createdAt).toLocaleDateString("es-CR", { day: "2-digit", month: "short", year: "numeric" }) : "—" },
+                          { label: "Vence", value: accountData.expiresAt ? new Date(accountData.expiresAt).toLocaleDateString("es-CR", { day: "2-digit", month: "short", year: "numeric" }) : "Sin fecha" },
+                          { label: "Último pago", value: accountData.paymentMethod || "—" },
+                          { label: "Email", value: accountData.email || "—" },
+                        ].map(({ label, value }) => (
+                          <div key={label}>
+                            <p className="text-xs text-gray-400 uppercase tracking-wider mb-0.5">{label}</p>
+                            <p className="text-sm font-semibold text-gray-800">{value}</p>
+                          </div>
+                        ))}
+                      </div>
+                      <button onClick={() => setRenewModal(true)}
+                        className="w-full py-3 rounded-xl bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                        🔄 Solicitar renovación
+                      </button>
+                    </div>
+                  ) : <div className="text-center py-8 text-gray-400">Cargando datos...</div>}
+                </div>
+
+                {/* Cambiar contraseña */}
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Settings size={15} className="text-gray-500" />
+                      <h3 className="font-bold text-gray-800">Cambiar Contraseña</h3>
+                    </div>
+                    <button onClick={() => setChangePwModal(!changePwModal)}
+                      className="text-xs text-blue-500 hover:underline">
+                      {changePwModal ? "Cancelar" : "Cambiar"}
+                    </button>
+                  </div>
+                  {changePwModal && (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Nueva contraseña</label>
+                        <input type="password" value={pwForm.newPass} onChange={e => setPwForm(f => ({ ...f, newPass: e.target.value }))}
+                          placeholder="Mínimo 6 caracteres"
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Confirmar contraseña</label>
+                        <input type="password" value={pwForm.confirmPass} onChange={e => setPwForm(f => ({ ...f, confirmPass: e.target.value }))}
+                          placeholder="Repite la contraseña"
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400" />
+                      </div>
+                      <button disabled={pwSaving || !pwForm.newPass || pwForm.newPass !== pwForm.confirmPass}
+                        onClick={async () => {
+                          if (pwForm.newPass !== pwForm.confirmPass) { toast.error("Las contraseñas no coinciden"); return; }
+                          setPwSaving(true);
+                          try {
+                            const auth = localStorage.getItem("icecast_auth");
+                            const res = await fetch(`${API}/my-account/change-password`, {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json", Authorization: `Basic ${auth}` },
+                              body: JSON.stringify({ newPassword: pwForm.newPass })
+                            });
+                            const d = await res.json();
+                            if (d.success) {
+                              toast.success("✅ Contraseña actualizada");
+                              setChangePwModal(false);
+                              setPwForm({ newPass: "", confirmPass: "" });
+                              // Actualizar auth en localStorage
+                              const [user] = Buffer.from(auth || "", "base64").toString().split(":");
+                              localStorage.setItem("icecast_auth", btoa(`${user}:${pwForm.newPass}`));
+                            } else toast.error(d.error || "Error al cambiar contraseña");
+                          } catch { toast.error("Error de conexión"); }
+                          setPwSaving(false);
+                        }}
+                        className="w-full py-2.5 rounded-xl bg-gray-800 text-white font-bold text-sm hover:bg-gray-900 transition-all disabled:opacity-40">
+                        {pwSaving ? "Guardando..." : "Actualizar contraseña"}
+                      </button>
+                      {pwForm.newPass && pwForm.confirmPass && pwForm.newPass !== pwForm.confirmPass && (
+                        <p className="text-xs text-red-500">Las contraseñas no coinciden</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* ── PLAYER GEN ───────────────────────────────────────────────── */}
             {section === "player-gen" && (
               <div className="p-6">
@@ -750,6 +877,65 @@ const MyStation = () => {
           </>
         )}
       </main>
+
+      {/* Modal Renovación */}
+      {renewModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="p-5 bg-gradient-to-r from-blue-500 to-violet-600">
+              <h2 className="text-lg font-black text-white">🔄 Solicitar Renovación</h2>
+              <p className="text-white/80 text-sm mt-0.5">Plan {accountData?.plan} · ${accountData?.planPrice}/{accountData?.planPeriod}</p>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Método de pago</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[{id:"SINPE",label:"🇨🇷 SINPE"},{id:"Wise",label:"💳 Wise"},{id:"PayPal",label:"🅿️ PayPal"}].map(m => (
+                    <button key={m.id} onClick={() => setRenewForm(f => ({ ...f, paymentMethod: m.id }))}
+                      className={`py-2.5 rounded-xl border-2 text-sm font-bold transition-all ${renewForm.paymentMethod === m.id ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Referencia / ID</label>
+                <input value={renewForm.paymentRef} onChange={e => setRenewForm(f => ({ ...f, paymentRef: e.target.value }))}
+                  placeholder="Número de confirmación"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-1.5">Titular del pago</label>
+                <input value={renewForm.paymentHolder} onChange={e => setRenewForm(f => ({ ...f, paymentHolder: e.target.value }))}
+                  placeholder="Nombre del titular"
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-blue-400" />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button onClick={() => setRenewModal(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50">Cancelar</button>
+                <button disabled={renewSending || !renewForm.paymentMethod || !renewForm.paymentRef}
+                  onClick={async () => {
+                    setRenewSending(true);
+                    try {
+                      const auth = localStorage.getItem("icecast_auth");
+                      const res = await fetch(`${API}/my-account/renewal-request`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", Authorization: `Basic ${auth}` },
+                        body: JSON.stringify(renewForm)
+                      });
+                      const d = await res.json();
+                      if (d.success) { toast.success("Solicitud enviada"); setRenewModal(false); setRenewForm({ paymentMethod: "", paymentRef: "", paymentHolder: "" }); }
+                      else toast.error(d.error || "Error");
+                    } catch { toast.error("Error de conexión"); }
+                    setRenewSending(false);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50">
+                  {renewSending ? "Enviando..." : "Enviar solicitud"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

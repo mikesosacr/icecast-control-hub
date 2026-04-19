@@ -725,6 +725,76 @@ app.post('/api/service-requests/:id/reject', (req, res) => {
 });
 
 
+
+// ─── MY ACCOUNT (streamer) ───────────────────────────────────────────────────
+app.get('/api/my-account', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const encoded = authHeader.replace('Basic ', '');
+  let username = '';
+  try { [username] = Buffer.from(encoded, 'base64').toString().split(':'); } catch { return res.status(401).json({ success: false }); }
+  const db = loadDb();
+  const user = (db.users || []).find(u => u.username === username);
+  if (!user) return res.status(404).json({ success: false, error: 'Usuario no encontrado' });
+  const sr = (db.serviceRequests || []).find(r => r.username === username && r.status === 'approved');
+  const now = new Date();
+  const expires = user.expiresAt ? new Date(user.expiresAt) : null;
+  const daysLeft = expires ? Math.ceil((expires - now) / (1000 * 60 * 60 * 24)) : null;
+  res.json({ success: true, data: {
+    username: user.username,
+    plan: user.plan || '—',
+    planPrice: user.planPrice || '0',
+    planPeriod: user.planPeriod || 'mes',
+    createdAt: user.createdAt,
+    expiresAt: user.expiresAt || null,
+    daysLeft,
+    status: !expires ? 'no_expiry' : daysLeft < 0 ? 'expired' : daysLeft <= 7 ? 'expiring_soon' : 'active',
+    email: user.email || (sr ? sr.email : ''),
+    phone: user.phone || '',
+    paymentMethod: sr ? sr.paymentMethod : '',
+  }});
+});
+
+app.post('/api/my-account/change-password', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const encoded = authHeader.replace('Basic ', '');
+  let username = '', currentPass = '';
+  try { [username, currentPass] = Buffer.from(encoded, 'base64').toString().split(':'); } catch { return res.status(401).json({ success: false }); }
+  const { newPassword } = req.body;
+  if (!newPassword || newPassword.length < 6) return res.status(400).json({ success: false, error: 'La contraseña debe tener al menos 6 caracteres' });
+  const db = loadDb();
+  const idx = (db.users || []).findIndex(u => u.username === username && u.password === currentPass);
+  if (idx === -1) return res.status(401).json({ success: false, error: 'Contraseña actual incorrecta' });
+  db.users[idx].password = newPassword;
+  // Actualizar también en mountpoints
+  (db.mountpoints || []).forEach((m, i) => { if (m.username === username) db.mountpoints[i].password = newPassword; });
+  saveDb(db);
+  res.json({ success: true, message: 'Contraseña actualizada correctamente' });
+});
+
+app.post('/api/my-account/renewal-request', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const encoded = authHeader.replace('Basic ', '');
+  let username = '';
+  try { [username] = Buffer.from(encoded, 'base64').toString().split(':'); } catch { return res.status(401).json({ success: false }); }
+  const db = loadDb();
+  const user = (db.users || []).find(u => u.username === username);
+  if (!user) return res.status(404).json({ success: false });
+  const { paymentMethod, paymentRef, paymentHolder, receiptUrl } = req.body;
+  if (!db.renewalRequests) db.renewalRequests = [];
+  db.renewalRequests.push({
+    id: Date.now().toString(),
+    username,
+    name: user.username,
+    plan: user.plan,
+    planPrice: user.planPrice,
+    paymentMethod, paymentRef, paymentHolder, receiptUrl,
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  });
+  saveDb(db);
+  res.json({ success: true, message: 'Solicitud de renovación enviada' });
+});
+
 // ─── BILLING ─────────────────────────────────────────────────────────────────
 app.get('/api/billing', (req, res) => {
   const db = loadDb();

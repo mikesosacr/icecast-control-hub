@@ -13,6 +13,7 @@ import Configuration from '@/pages/Configuration';
 import ServerControl from '@/pages/ServerControl';
 import RemoteServers from '@/pages/RemoteServers';
 import AIRadioPlayerGenerator from '@/pages/AIRadioPlayerGenerator';
+import RadioPlayers from '@/pages/RadioPlayers';
 import Index from '@/pages/Index';
 import NotFound from '@/pages/NotFound';
 import MyStation from '@/pages/MyStation';
@@ -53,6 +54,8 @@ function App() {
                 {/* AI Radio Player Generator is public */}
                 <Route path="/ai-radio-player" element={<AIRadioPlayerGenerator />} />
                 <Route path="/my-station" element={<MyStation />} />
+                <Route path="/my-station/players" element={<RadioPlayers />} />
+                
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Router>
