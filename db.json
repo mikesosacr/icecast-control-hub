@@ -15,7 +15,7 @@
         "current": 0,
         "peak": 0
       },
-      "status": "configured",
+      "status": "inactive",
       "isPublic": true,
       "streamStart": "2026-04-14T11:05:58.444Z",
       "mount": "/osaradio",

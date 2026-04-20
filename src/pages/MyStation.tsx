@@ -507,7 +507,7 @@ const MyStation = () => {
           <NavItem icon={<Activity size={15} />} label="Estadísticas" section="stats" active={section === "stats"} onClick={() => setSection("stats")} />
           <NavItem icon={<Users size={15} />} label="Mi Cuenta" section="account" active={section === "account"} onClick={() => setSection("account")} />
           <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3 mt-4 mb-2">Herramientas</div>
-          <NavItem icon={<Wand2 size={15} />} label="Generador de Reproductores" section="player-gen" active={section === "player-gen"} onClick={() => setSection("player-gen")} />
+          <NavItem icon={<Wand2 size={15} />} label="Generador de Reproductores" section="player-gen" active={section === "player-gen"} onClick={() => navigate('/my-station/players')} />
         </nav>
 
         {/* Clock + Logout */}

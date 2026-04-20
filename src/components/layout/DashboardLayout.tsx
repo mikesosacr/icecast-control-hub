@@ -88,7 +88,7 @@ const DashboardLayout = () => {
                   <MenubarTrigger className={cn("text-sm rounded-md px-3 py-1","data-[state=open]:bg-secondary")}>Herramientas</MenubarTrigger>
                   <MenubarContent>
                     <MenubarItem asChild className="flex gap-2 items-center">
-                      <Link to="/ai-radio-player"><Headphones size={16} /> Generador de Reproductores IA</Link>
+                      <Link to="/my-station/players"><Headphones size={16} /> Generador de Reproductores IA</Link>
                     </MenubarItem>
                     <MenubarItem asChild className="flex gap-2 items-center">
                       <Link to="/users"><Users size={16} /> Gestionar usuarios</Link>
