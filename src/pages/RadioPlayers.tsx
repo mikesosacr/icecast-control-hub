@@ -161,7 +161,7 @@ ${BLINK}
 .shell{width:100%;max-width:380px;border-radius:24px;overflow:hidden;position:relative;background:#111;box-shadow:0 40px 80px rgba(0,0,0,.6)}
 .bg-blur{position:absolute;inset:-20px;background-size:cover;background-position:center;filter:blur(40px) brightness(.3) saturate(1.5);transform:scale(1.1);transition:background-image 1.2s ease;z-index:0}
 .body{position:relative;z-index:1;padding:20px}
-.cover-wrap{position:relative;width:100%;aspect-ratio:1;border-radius:18px;overflow:hidden;margin-bottom:18px;background:#1a1a1a}
+.cover-wrap{position:relative;width:100%;height:180px;border-radius:18px;overflow:hidden;margin-bottom:18px;background:#1a1a1a}
 .cover-img{width:100%;height:100%;background-size:cover;background-position:center;transition:background-image .8s ease;display:flex;align-items:center;justify-content:center;font-size:64px}
 .cover-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 60%)}
 .cover-live{position:absolute;bottom:12px;left:12px;display:none;align-items:center;gap:5px;background:rgba(239,68,68,.25);backdrop-filter:blur(8px);border:1px solid rgba(239,68,68,.5);color:#fca5a5;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:1px}
@@ -841,10 +841,8 @@ ${meta}
   }
 }
 
-// ─── Live Preview ─────────────────────────────────────────────────────────────
-function LivePreview({ playerId, config, bgKey }: {
-  playerId: string; config: PlayerConfig; bgKey: string;
-}) {
+// ─── Live Preview (card de tamaño fijo, NO pantalla completa) ────────────────
+function LivePreview({ playerId, config }: { playerId: string; config: PlayerConfig }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const html = generatePlayerHTML(playerId, config);
 
@@ -852,81 +850,59 @@ function LivePreview({ playerId, config, bgKey }: {
     const iframe = iframeRef.current;
     if (!iframe) return;
     const blob = new Blob([html], { type: "text/html" });
-    const blobUrl = URL.createObjectURL(blob);
-    iframe.src = blobUrl;
-    return () => URL.revokeObjectURL(blobUrl);
+    const url  = URL.createObjectURL(blob);
+    iframe.src = url;
+    return () => URL.revokeObjectURL(url);
   }, [html]);
 
-  const bgStyle: React.CSSProperties =
-    bgKey === "colorful" ? { background: "linear-gradient(135deg,#667eea 0%,#764ba2 100%)" }
-    : bgKey === "dark"   ? { background: "#0f172a" }
-    :                      { background: "#e2e0dc" };
-
   return (
-    <div className="w-full h-full flex items-center justify-center" style={bgStyle}>
-      {/* Sombra + marco tipo "dispositivo" centrado */}
-      <div style={{
-        width: 380,
-        height: 520,
-        flexShrink: 0,
-        borderRadius: 20,
-        overflow: "hidden",
-        boxShadow: "0 24px 60px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.08)",
-        position: "relative",
-      }}>
-        <iframe
-          ref={iframeRef}
-          title={`preview-${playerId}`}
-          sandbox="allow-scripts"
-          style={{ width: "100%", height: "100%", border: "none", display: "block" }}
-        />
-      </div>
+    <div style={{
+      width: "100%",
+      height: 320,
+      borderRadius: 12,
+      overflow: "hidden",
+      background: "#0f172a",
+      border: "1px solid rgba(255,255,255,.06)",
+      flexShrink: 0,
+    }}>
+      <iframe
+        ref={iframeRef}
+        title={`preview-${playerId}`}
+        sandbox="allow-scripts"
+        style={{ width: "100%", height: "100%", border: "none", display: "block" }}
+      />
     </div>
   );
 }
 
-// ─── Player Card (compacta, solo una línea) ───────────────────────────────────
-function PlayerCard({ player, selected, onClick }: {
+// ─── Player Chip (grilla compacta) ────────────────────────────────────────────
+function PlayerChip({ player, selected, onClick }: {
   player: PlayerDef; selected: boolean; onClick: () => void;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-left transition-all ${
+      className={`flex flex-col items-center gap-1 p-2.5 rounded-xl border-2 transition-all text-center ${
         selected
-          ? "bg-violet-50 text-violet-800 shadow-sm"
-          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+          ? "border-violet-500 bg-violet-50"
+          : "border-transparent bg-gray-50 hover:bg-gray-100 hover:border-gray-200"
       }`}
     >
-      <span className="text-lg flex-shrink-0 leading-none">{player.tag}</span>
-      <span className={`text-sm font-semibold flex-1 truncate ${selected ? "text-violet-800" : "text-gray-700"}`}>
+      <span className="text-2xl leading-none">{player.tag}</span>
+      <span className={`text-xs font-semibold leading-tight ${selected ? "text-violet-700" : "text-gray-600"}`}>
         {player.name}
       </span>
-      {selected && (
-        <span className="w-1.5 h-1.5 rounded-full bg-violet-500 flex-shrink-0" />
-      )}
     </button>
-  );
-}
-
-// ─── Sección colapsable de config ─────────────────────────────────────────────
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="border-b border-gray-100 last:border-0">
-      <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">{title}</div>
-      <div className="px-4 pb-4 space-y-3">{children}</div>
-    </div>
   );
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export default function RadioPlayers() {
   const navigate = useNavigate();
-  const [selected, setSelected]   = useState("pulse");
-  const [tab, setTab]             = useState<"preview" | "code">("preview");
-  const [bg, setBg]               = useState("dark");
-  const [copied, setCopied]       = useState(false);
-  const [cfg, setCfg]             = useState<PlayerConfig>({
+  const [selected, setSelected] = useState("pulse");
+  const [copied,   setCopied]   = useState(false);
+  const [showCode, setShowCode] = useState(false);
+  const [cfg, setCfg] = useState<PlayerConfig>({
     name: "", streamUrl: "", genre: "",
     logoEmoji: "📻", primaryColor: "#6d28d9", secondaryColor: "#db2777",
   });
@@ -959,63 +935,57 @@ export default function RadioPlayers() {
   ];
 
   return (
+    // Layout: columna izquierda fija (config + preview pequeño) | columna derecha (código)
     <div className="flex h-screen w-screen overflow-hidden bg-gray-50 font-sans">
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          PANEL IZQUIERDO — ancho fijo 300px, dividido en 2 zonas con scroll
-      ══════════════════════════════════════════════════════════════════════ */}
-      <aside className="w-72 flex-shrink-0 flex flex-col h-full bg-white border-r border-gray-100 shadow-sm">
+      {/* ─── PANEL IZQUIERDO: Config + Preview acotado ─────────────────────── */}
+      <aside className="w-80 flex-shrink-0 flex flex-col h-full bg-white border-r border-gray-100">
 
-        {/* Header fijo */}
-        <div className="px-4 pt-4 pb-3 border-b border-gray-100 flex-shrink-0">
+        {/* Header */}
+        <div className="px-4 pt-3 pb-3 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
           <button
             onClick={() => navigate("/my-station")}
-            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 mb-3 transition-colors"
+            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 transition-colors"
           >
             <ChevronLeft size={12} /> Mi Estación
           </button>
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-500 flex items-center justify-center flex-shrink-0">
-              <Music2 size={14} className="text-white" />
-            </div>
-            <div>
-              <div className="text-sm font-bold text-gray-900 leading-tight">Generador de Players</div>
-              <div className="text-xs text-gray-400">Configura y descarga</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Lista de players — altura fija ~260px, scroll interno */}
-        <div className="flex-shrink-0 border-b border-gray-100" style={{ maxHeight: 268, overflowY: "auto" }}>
-          <div className="px-2 pt-2 pb-2 space-y-0.5">
-            {PLAYERS.map(p => (
-              <PlayerCard key={p.id} player={p} selected={selected === p.id} onClick={() => setSelected(p.id)} />
-            ))}
-          </div>
-        </div>
-
-        {/* Descripción del player seleccionado */}
-        <div className="px-4 py-2.5 border-b border-gray-100 flex-shrink-0 bg-violet-50">
           <div className="flex items-center gap-2">
-            <span className="text-lg">{player.tag}</span>
-            <div>
-              <div className="text-xs font-bold text-violet-800">{player.name}</div>
-              <div className="text-xs text-violet-500 leading-tight">{player.description}</div>
+            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-violet-600 to-fuchsia-500 flex items-center justify-center">
+              <Music2 size={12} className="text-white" />
             </div>
+            <span className="text-sm font-bold text-gray-800">Players</span>
           </div>
         </div>
 
-        {/* Config — flex-1 con scroll */}
+        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
 
-          <Section title="Radio">
+          {/* ① Selección de estilo — grilla 3 columnas */}
+          <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Estilo</p>
+            <div className="grid grid-cols-3 gap-1.5">
+              {PLAYERS.map(p => (
+                <PlayerChip key={p.id} player={p} selected={selected === p.id} onClick={() => setSelected(p.id)} />
+              ))}
+            </div>
+          </div>
+
+          {/* ② Preview pequeño y acotado */}
+          <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Vista previa</p>
+            <LivePreview playerId={selected} config={cfg} />
+          </div>
+
+          {/* ③ Config */}
+          <div className="px-4 pt-4 pb-3 border-b border-gray-100 space-y-3">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Configurar</p>
             <div>
-              <label className="text-xs font-medium text-gray-500 block mb-1">Nombre</label>
+              <label className="text-xs font-medium text-gray-500 block mb-1">Nombre de la radio</label>
               <input
                 value={cfg.name}
                 onChange={e => setCfg(c => ({ ...c, name: e.target.value }))}
                 placeholder="La Mejor FM"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-400 transition-colors bg-gray-50"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-violet-400"
               />
             </div>
             <div>
@@ -1026,7 +996,7 @@ export default function RadioPlayers() {
                 value={cfg.streamUrl}
                 onChange={e => setCfg(c => ({ ...c, streamUrl: e.target.value }))}
                 placeholder="http://host:8000/mount"
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono focus:outline-none focus:border-violet-400 transition-colors bg-gray-50"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono bg-gray-50 focus:outline-none focus:border-violet-400"
               />
               <p className="text-xs text-gray-400 mt-1">Metadata y portadas automáticas</p>
             </div>
@@ -1036,149 +1006,106 @@ export default function RadioPlayers() {
                 value={cfg.genre}
                 onChange={e => setCfg(c => ({ ...c, genre: e.target.value }))}
                 placeholder="Rock, Pop, Electrónica..."
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-violet-400 transition-colors bg-gray-50"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:outline-none focus:border-violet-400"
               />
             </div>
-          </Section>
+          </div>
 
-          <Section title="Ícono">
+          {/* ④ Ícono */}
+          <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Ícono</p>
             <div className="grid grid-cols-5 gap-1">
               {EMOJIS.map(e => (
                 <button
                   key={e}
                   onClick={() => setCfg(c => ({ ...c, logoEmoji: e }))}
-                  className={`h-8 rounded-lg text-base transition-all ${cfg.logoEmoji === e ? "bg-violet-100 ring-2 ring-violet-400 scale-110" : "bg-gray-50 hover:bg-gray-100"}`}
+                  className={`h-9 rounded-lg text-lg transition-all ${cfg.logoEmoji === e ? "bg-violet-100 ring-2 ring-violet-400" : "bg-gray-50 hover:bg-gray-100"}`}
                 >
                   {e}
                 </button>
               ))}
             </div>
-          </Section>
+          </div>
 
-          <Section title="Colores">
-            <div className="flex gap-2">
+          {/* ⑤ Colores */}
+          <div className="px-4 pt-4 pb-4 space-y-3">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Colores</p>
+            <div className="flex gap-1.5 flex-wrap">
               {PRESETS.map((pr, i) => (
                 <button
                   key={i}
                   onClick={() => setCfg(c => ({ ...c, primaryColor: pr.p, secondaryColor: pr.s }))}
-                  className="w-8 h-8 rounded-lg border-2 border-white shadow hover:scale-110 transition-transform flex-shrink-0"
+                  className="w-8 h-8 rounded-lg border-2 border-white shadow hover:scale-110 transition-transform"
                   style={{ background: `linear-gradient(135deg,${pr.p},${pr.s})` }}
                 />
               ))}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <div className="flex-1">
                 <label className="text-xs text-gray-400 block mb-1">Primario</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={cfg.primaryColor}
+                <div className="flex items-center gap-1.5">
+                  <input type="color" value={cfg.primaryColor}
                     onChange={e => setCfg(c => ({ ...c, primaryColor: e.target.value }))}
-                    className="w-8 h-8 rounded-lg border border-gray-200 cursor-pointer p-0.5 bg-white flex-shrink-0"
-                  />
-                  <input
-                    value={cfg.primaryColor}
+                    className="w-8 h-8 rounded border border-gray-200 cursor-pointer p-0.5 bg-white flex-shrink-0" />
+                  <input value={cfg.primaryColor}
                     onChange={e => setCfg(c => ({ ...c, primaryColor: e.target.value }))}
-                    className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-violet-400 bg-gray-50"
-                  />
+                    className="flex-1 min-w-0 border border-gray-200 rounded px-2 py-1.5 text-xs font-mono bg-gray-50 focus:outline-none focus:border-violet-400" />
                 </div>
               </div>
               <div className="flex-1">
                 <label className="text-xs text-gray-400 block mb-1">Secundario</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={cfg.secondaryColor}
+                <div className="flex items-center gap-1.5">
+                  <input type="color" value={cfg.secondaryColor}
                     onChange={e => setCfg(c => ({ ...c, secondaryColor: e.target.value }))}
-                    className="w-8 h-8 rounded-lg border border-gray-200 cursor-pointer p-0.5 bg-white flex-shrink-0"
-                  />
-                  <input
-                    value={cfg.secondaryColor}
+                    className="w-8 h-8 rounded border border-gray-200 cursor-pointer p-0.5 bg-white flex-shrink-0" />
+                  <input value={cfg.secondaryColor}
                     onChange={e => setCfg(c => ({ ...c, secondaryColor: e.target.value }))}
-                    className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-xs font-mono focus:outline-none focus:border-violet-400 bg-gray-50"
-                  />
+                    className="flex-1 min-w-0 border border-gray-200 rounded px-2 py-1.5 text-xs font-mono bg-gray-50 focus:outline-none focus:border-violet-400" />
                 </div>
               </div>
             </div>
-          </Section>
+          </div>
 
         </div>
 
-        {/* Botones de acción — pegados al fondo */}
-        <div className="px-4 py-3 border-t border-gray-100 flex gap-2 flex-shrink-0 bg-white">
-          <button
-            onClick={handleCopy}
-            className="flex-1 flex items-center justify-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 border border-gray-200 hover:border-gray-300 py-2 rounded-lg transition-all font-medium"
-          >
-            {copied ? <><Check size={11} className="text-green-500" /> Copiado</> : <><Copy size={11} /> Copiar HTML</>}
+        {/* Botones fijos en el fondo */}
+        <div className="px-4 py-3 border-t border-gray-100 flex gap-2 flex-shrink-0">
+          <button onClick={handleCopy}
+            className="flex-1 flex items-center justify-center gap-1.5 text-xs border border-gray-200 hover:border-gray-300 text-gray-600 hover:text-gray-900 py-2.5 rounded-lg font-medium transition-all">
+            {copied ? <><Check size={11} className="text-green-500" />Copiado</> : <><Copy size={11} />Copiar HTML</>}
           </button>
-          <button
-            onClick={handleDownload}
-            className="flex-1 flex items-center justify-center gap-1.5 text-xs text-white py-2 rounded-lg font-semibold transition-all bg-violet-600 hover:bg-violet-700 shadow-sm"
-          >
-            <Download size={11} /> Descargar
+          <button onClick={handleDownload}
+            className="flex-1 flex items-center justify-center gap-1.5 text-xs bg-violet-600 hover:bg-violet-700 text-white py-2.5 rounded-lg font-semibold shadow-sm transition-all">
+            <Download size={11} />Descargar .html
           </button>
         </div>
       </aside>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          PANEL DERECHO — Preview o código, ocupa el resto
-      ══════════════════════════════════════════════════════════════════════ */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-gray-50">
-
-        {/* Topbar delgado */}
+      {/* ─── PANEL DERECHO: Código HTML ────────────────────────────────────── */}
+      <main className="flex-1 flex flex-col overflow-hidden">
         <div className="h-10 flex-shrink-0 bg-white border-b border-gray-100 px-4 flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <button
-              onClick={() => setTab("preview")}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${tab === "preview" ? "bg-gray-100 text-gray-800" : "text-gray-400 hover:text-gray-600"}`}
-            >
-              <Eye size={11} /> Preview
-            </button>
-            <button
-              onClick={() => setTab("code")}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${tab === "code" ? "bg-gray-100 text-gray-800" : "text-gray-400 hover:text-gray-600"}`}
-            >
-              <Code2 size={11} /> HTML
-            </button>
-            {tab === "preview" && (
-              <div className="flex items-center gap-1 ml-2 border-l border-gray-100 pl-2">
-                {[{ id: "white", label: "Claro" }, { id: "dark", label: "Oscuro" }, { id: "colorful", label: "Color" }].map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setBg(t.id)}
-                    className={`px-2 py-0.5 rounded text-xs font-medium transition-all ${bg === t.id ? "bg-gray-800 text-white" : "text-gray-400 hover:text-gray-600"}`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-            )}
+          <div className="flex items-center gap-2">
+            <span className="text-lg">{player.tag}</span>
+            <span className="text-sm font-bold text-gray-700">{player.name}</span>
+            <span className="text-xs text-gray-400">— {player.description}</span>
           </div>
-          <span className="text-xs text-gray-400 font-mono">
-            {(cfg.name || "player").replace(/\s+/g,"-").toLowerCase()}-{selected}.html
-          </span>
+          <div className="flex items-center gap-2">
+            <button onClick={handleCopy}
+              className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors">
+              {copied ? <><Check size={10} className="text-green-400" />Copiado</> : <><Copy size={10} />Copiar</>}
+            </button>
+            <span className="text-xs text-gray-600 font-mono bg-gray-100 px-2 py-1 rounded">
+              {(cfg.name||"player").replace(/\s+/g,"-").toLowerCase()}-{selected}.html
+            </span>
+          </div>
         </div>
-
-        {/* Área principal */}
-        <div className="flex-1 overflow-hidden">
-          {tab === "preview" ? (
-            <LivePreview playerId={selected} config={cfg} bgKey={bg} />
-          ) : (
-            <div className="h-full bg-gray-950 flex flex-col">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800 flex-shrink-0">
-                <span className="text-xs text-gray-500 font-mono">HTML standalone — embeddable anywhere</span>
-                <button onClick={handleCopy} className="text-xs text-gray-400 hover:text-white flex items-center gap-1 transition-colors">
-                  {copied ? <><Check size={10} className="text-green-400" />Copiado</> : <><Copy size={10} />Copiar</>}
-                </button>
-              </div>
-              <pre className="text-green-300 text-xs font-mono p-4 overflow-auto flex-1 leading-relaxed whitespace-pre-wrap break-all">
-                {html}
-              </pre>
-            </div>
-          )}
+        <div className="flex-1 bg-gray-950 overflow-auto">
+          <pre className="text-green-300 text-xs font-mono p-5 leading-relaxed whitespace-pre-wrap break-all">
+            {html}
+          </pre>
         </div>
       </main>
+
     </div>
   );
 }
